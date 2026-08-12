@@ -1,0 +1,32 @@
+# FROZEN defense for main benchmark (from pilot_v3).
+# Do not change guardrail_prompt_version / input_hybrid after this run starts.
+run_id: main
+output_dir: data/runs/main
+seed_limit: 100
+candidate_limit: 400
+clean_pass_mode: both
+use_fixture_seeds: false
+skip_llm: false
+input_hybrid: true
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G0, G1, G2]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+hotpot_dataset: hotpotqa/hotpot_qa
+hotpot_split: validation
+hotpot_config: distractor
