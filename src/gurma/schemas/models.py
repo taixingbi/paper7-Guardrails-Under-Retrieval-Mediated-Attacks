@@ -57,6 +57,7 @@ class AttackCase(BaseModel):
     attacked_context: str
     attack_payload: str
     attack_target: str
+    success_markers: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

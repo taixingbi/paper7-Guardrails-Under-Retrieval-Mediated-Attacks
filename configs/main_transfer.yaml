@@ -1,0 +1,39 @@
+# Experiment 4: unseen attack transfer.
+# Defense is FROZEN (do not retune rules or v3 prompts).
+# Held-out templates + a different generator model (deepseek).
+run_id: main_transfer
+output_dir: data/runs/main_transfer
+reuse_from: data/runs/main
+seed_limit: 50
+candidate_limit: 50
+clean_pass_mode: both
+use_fixture_seeds: false
+skip_llm: false
+skip_clean_runs: true
+attack_family: held_out
+attack_generator_model: deepseek
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G0, G1, G2]
+attacks:
+  - indirect_injection
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+bootstrap_seed: 0
+hotpot_dataset: hotpotqa/hotpot_qa
+hotpot_split: validation
+hotpot_config: distractor

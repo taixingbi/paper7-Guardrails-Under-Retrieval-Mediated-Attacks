@@ -12,10 +12,40 @@
     {
       "guardrail": "G0",
       "instruction_safety_asr": 0.685,
+      "instruction_safety_asr_ci": {
+        "low": 0.6483333333333333,
+        "high": 0.7233333333333334,
+        "n": 600,
+        "n_boot": 2000
+      },
       "poisoning_success_rate": 0.53,
+      "poisoning_success_rate_ci": {
+        "low": 0.46,
+        "high": 0.6,
+        "n": 200,
+        "n_boot": 2000
+      },
       "macro_attack_success": 0.64625,
+      "macro_attack_success_ci": {
+        "low": 0.6125,
+        "high": 0.67875,
+        "n": 800,
+        "n_boot": 2000
+      },
       "task_accuracy": 0.27875,
+      "task_accuracy_ci": {
+        "low": 0.24875,
+        "high": 0.31,
+        "n": 800,
+        "n_boot": 2000
+      },
       "over_refusal": 0.0,
+      "over_refusal_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      },
       "safety_violation_rate": 0.15125,
       "n_attack": 800,
       "n_clean": 200
@@ -23,10 +53,40 @@
     {
       "guardrail": "G1",
       "instruction_safety_asr": 0.0,
+      "instruction_safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 600,
+        "n_boot": 2000
+      },
       "poisoning_success_rate": 0.3,
+      "poisoning_success_rate_ci": {
+        "low": 0.235,
+        "high": 0.36,
+        "n": 200,
+        "n_boot": 2000
+      },
       "macro_attack_success": 0.075,
+      "macro_attack_success_ci": {
+        "low": 0.0575,
+        "high": 0.09375,
+        "n": 800,
+        "n_boot": 2000
+      },
       "task_accuracy": 0.82,
+      "task_accuracy_ci": {
+        "low": 0.79375,
+        "high": 0.84625,
+        "n": 800,
+        "n_boot": 2000
+      },
       "over_refusal": 0.0,
+      "over_refusal_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      },
       "safety_violation_rate": 0.0,
       "n_attack": 800,
       "n_clean": 200
@@ -34,10 +94,40 @@
     {
       "guardrail": "G2",
       "instruction_safety_asr": 0.0,
+      "instruction_safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 600,
+        "n_boot": 2000
+      },
       "poisoning_success_rate": 0.305,
+      "poisoning_success_rate_ci": {
+        "low": 0.24,
+        "high": 0.37,
+        "n": 200,
+        "n_boot": 2000
+      },
       "macro_attack_success": 0.07625,
+      "macro_attack_success_ci": {
+        "low": 0.05875,
+        "high": 0.09625,
+        "n": 800,
+        "n_boot": 2000
+      },
       "task_accuracy": 0.81875,
+      "task_accuracy_ci": {
+        "low": 0.79125,
+        "high": 0.845,
+        "n": 800,
+        "n_boot": 2000
+      },
       "over_refusal": 0.01,
+      "over_refusal_ci": {
+        "low": 0.0,
+        "high": 0.025,
+        "n": 200,
+        "n_boot": 2000
+      },
       "safety_violation_rate": 0.0,
       "n_attack": 800,
       "n_clean": 200
@@ -47,40 +137,148 @@
     {
       "attack": "authority_conflict",
       "G0_success": 0.545,
+      "G0_success_ci": {
+        "low": 0.475,
+        "high": 0.615,
+        "n": 200,
+        "n_boot": 2000
+      },
       "G1_success": 0.0,
-      "G2_success": 0.0
+      "G1_success_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "G2_success": 0.0,
+      "G2_success_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      }
     },
     {
       "attack": "context_poisoning",
       "G0_success": 0.53,
+      "G0_success_ci": {
+        "low": 0.46,
+        "high": 0.6,
+        "n": 200,
+        "n_boot": 2000
+      },
       "G1_success": 0.3,
-      "G2_success": 0.305
+      "G1_success_ci": {
+        "low": 0.24,
+        "high": 0.365,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "G2_success": 0.305,
+      "G2_success_ci": {
+        "low": 0.245,
+        "high": 0.37,
+        "n": 200,
+        "n_boot": 2000
+      }
     },
     {
       "attack": "indirect_injection",
       "G0_success": 0.905,
+      "G0_success_ci": {
+        "low": 0.86,
+        "high": 0.945,
+        "n": 200,
+        "n_boot": 2000
+      },
       "G1_success": 0.0,
-      "G2_success": 0.0
+      "G1_success_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "G2_success": 0.0,
+      "G2_success_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      }
     },
     {
       "attack": "policy_retrieval",
       "G0_success": 0.605,
+      "G0_success_ci": {
+        "low": 0.535,
+        "high": 0.67,
+        "n": 200,
+        "n_boot": 2000
+      },
       "G1_success": 0.0,
-      "G2_success": 0.0
+      "G1_success_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "G2_success": 0.0,
+      "G2_success_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 200,
+        "n_boot": 2000
+      }
     }
   ],
   "table4_cross_model": [
     {
       "model": "llama",
       "G0_safety_asr": 0.9766666666666667,
+      "G0_safety_asr_ci": {
+        "low": 0.96,
+        "high": 0.9933333333333333,
+        "n": 300,
+        "n_boot": 2000
+      },
       "G1_safety_asr": 0.0,
-      "G2_safety_asr": 0.0
+      "G1_safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "G2_safety_asr": 0.0,
+      "G2_safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      }
     },
     {
       "model": "nova-pro",
       "G0_safety_asr": 0.3933333333333333,
+      "G0_safety_asr_ci": {
+        "low": 0.33666666666666667,
+        "high": 0.45,
+        "n": 300,
+        "n_boot": 2000
+      },
       "G1_safety_asr": 0.0,
-      "G2_safety_asr": 0.0
+      "G1_safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "G2_safety_asr": 0.0,
+      "G2_safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      }
     }
   ],
   "scatter_safety_vs_benign_acc": [
@@ -106,5 +304,6 @@
       "over_refusal": 0.01
     }
   ],
-  "note": "Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls."
+  "note": "Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls. Brackets are 95% bootstrap CIs.",
+  "bootstrap_n": 2000
 }

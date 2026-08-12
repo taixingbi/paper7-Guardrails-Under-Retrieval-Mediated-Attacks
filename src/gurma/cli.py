@@ -7,7 +7,7 @@ from gurma.config import load_config
 from gurma.eval.ablation_report import build_ablation_report
 from gurma.eval.paper_report import write_paper_report
 from gurma.eval.pilot_gate import stage_pilot_gate
-from gurma.pipeline import rebuild_report, rerun_guardrails, run_pipeline
+from gurma.pipeline import rebuild_report, rerun_guardrails, run_pipeline, run_transfer
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -55,6 +55,18 @@ def main(argv: list[str] | None = None) -> int:
         "paper-report",
         help="Generate reports/paper7_results.md from saved metrics JSON (no LLM)",
     )
+    p_xfer = sub.add_parser(
+        "run-transfer",
+        help=(
+            "Experiment 4: reuse frozen seeds, generate held-out attacks "
+            "(new templates + generator model), evaluate frozen G0/G1/G2"
+        ),
+    )
+    p_xfer.add_argument(
+        "--skip-llm",
+        action="store_true",
+        help="Offline heuristics only",
+    )
 
     args = parser.parse_args(argv)
     cfg = (
@@ -81,6 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         build_ablation_report()
     elif args.cmd == "paper-report":
         write_paper_report()
+    elif args.cmd == "run-transfer":
+        assert cfg is not None
+        run_transfer(cfg)
     else:
         parser.error(f"unknown command {args.cmd}")
         return 2

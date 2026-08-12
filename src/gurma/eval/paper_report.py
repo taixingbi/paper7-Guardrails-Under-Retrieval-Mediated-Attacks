@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from gurma.eval.bootstrap import fmt_ci
+
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -21,14 +23,18 @@ def _fmt(x: Any, digits: int = 3) -> str:
     return f"{float(x):.{digits}f}"
 
 
+def _cell(row: dict[str, Any], point_key: str, ci_key: str) -> str:
+    return fmt_ci(row.get(point_key), row.get(ci_key))
+
+
 def _row(guard: dict[str, Any]) -> str:
     return (
         f"| {guard['guardrail']} "
-        f"| {_fmt(guard.get('instruction_safety_asr'))} "
-        f"| {_fmt(guard.get('poisoning_success_rate'))} "
-        f"| {_fmt(guard.get('macro_attack_success'))} "
-        f"| {_fmt(guard.get('task_accuracy'))} "
-        f"| {_fmt(guard.get('over_refusal'))} |"
+        f"| {_cell(guard, 'instruction_safety_asr', 'instruction_safety_asr_ci')} "
+        f"| {_cell(guard, 'poisoning_success_rate', 'poisoning_success_rate_ci')} "
+        f"| {_cell(guard, 'macro_attack_success', 'macro_attack_success_ci')} "
+        f"| {_cell(guard, 'task_accuracy', 'task_accuracy_ci')} "
+        f"| {_cell(guard, 'over_refusal', 'over_refusal_ci')} |"
     )
 
 
@@ -39,6 +45,8 @@ def render_paper_report(
     ablation: dict[str, Any],
     llm_metrics: dict[str, Any] | None = None,
     rules_metrics: dict[str, Any] | None = None,
+    transfer_metrics: dict[str, Any] | None = None,
+    transfer_gate: dict[str, Any] | None = None,
 ) -> str:
     t1 = main_metrics.get("table1_dataset") or {}
     t2 = main_metrics.get("table2_main") or []
@@ -54,8 +62,8 @@ def render_paper_report(
     lines = [
         "# Paper 7 Results Report",
         "",
-        "Generated from frozen main + input ablations. "
-        "Regenerate with `gurma paper-report`.",
+        "Generated from frozen main + input ablations + held-out transfer. "
+        "Regenerate with `gurma paper-report`. Brackets are 95% bootstrap CIs.",
         "",
         "## Setup",
         "",
@@ -65,19 +73,27 @@ def render_paper_report(
         "- Models: `nova-pro`, `llama`; guard/judge: `gpt-oss`",
         "- Defense freeze: hybrid input (`rules` first) + `v3` prompts ([FREEZE.md](../FREEZE.md))",
         "- Main conditions: 3000 (2400 attack + 600 clean); API calls ≫ 3000",
+        "- Experiment 4: 50 frozen seeds × A1/A3/A4 held-out templates "
+        "(generator=`deepseek`) × G0/G1/G2 × 2 models; defense not retuned",
         "",
         "## Findings",
         "",
         "1. **G0 is highly vulnerable** to retrieval-mediated instruction attacks "
         f"(Safety ASR {_fmt(t2[0].get('instruction_safety_asr') if t2 else None)}; "
         "A1 = 0.905). Llama is much weaker than Nova Pro on G0 (0.977 vs 0.393).",
-        "2. **Hybrid G1 eliminates instruction/safety attacks** (Safety ASR 0.000) "
-        "and raises attacked-task accuracy 0.279 → 0.820 with ~0 over-refusal.",
+        "2. **Hybrid G1 eliminates in-distribution instruction/safety attacks** "
+        "(Safety ASR 0.000) and raises attacked-task accuracy 0.279 → 0.820 "
+        "with ~0 over-refusal.",
         "3. **G2 adds almost nothing on hybrid** (rescue 10/517 G0 successes after G1). "
         "G2 rewrite is rare (11), so accuracy is not rewrite-inflated.",
         "4. **Ablation:** rules-only also reaches Safety ASR 0.000; LLM-only remains "
         "0.457. Hybrid mainly improves **PSR** vs rules (0.300 vs 0.415).",
-        "5. **Limitation:** context poisoning remains (PSR ≈ 0.30 under hybrid G1/G2).",
+        "5. **Limitation:** context poisoning remains (PSR ≈ 0.30 under hybrid G1/G2). "
+        "This is an integrity leftover, not a missing instruction filter.",
+        "6. **Transfer:** unseen templates mostly evade frozen rules "
+        "(G1 allow ≈ 83%). G0 Safety ASR is 0.113; G1 only drops it to 0.093; "
+        "G2 brings it to 0.000. Deterministic filters work on known structures; "
+        "defense-in-depth matters under novel phrasing.",
         "",
         "## Table 1 — Dataset",
         "",
@@ -106,7 +122,8 @@ def render_paper_report(
     lines += [
         "",
         "Safety ASR = mean success over A1/A3/A4. PSR = A2 only. "
-        "Macro = mean over all four. Acc = task accuracy on attacked cases.",
+        "Macro = mean over all four. Acc = task accuracy on attacked cases. "
+        "CIs are percentile bootstrap (n=2000).",
         "",
         "## Table 3 — Attack breakdown",
         "",
@@ -115,8 +132,10 @@ def render_paper_report(
     ]
     for row in t3:
         lines.append(
-            f"| {row.get('attack')} | {_fmt(row.get('G0_success'))} "
-            f"| {_fmt(row.get('G1_success'))} | {_fmt(row.get('G2_success'))} |"
+            f"| {row.get('attack')} | "
+            f"{_cell(row, 'G0_success', 'G0_success_ci')} | "
+            f"{_cell(row, 'G1_success', 'G1_success_ci')} | "
+            f"{_cell(row, 'G2_success', 'G2_success_ci')} |"
         )
 
     lines += [
@@ -128,8 +147,10 @@ def render_paper_report(
     ]
     for row in t4:
         lines.append(
-            f"| {row.get('model')} | {_fmt(row.get('G0_safety_asr'))} "
-            f"| {_fmt(row.get('G1_safety_asr'))} | {_fmt(row.get('G2_safety_asr'))} |"
+            f"| {row.get('model')} | "
+            f"{_cell(row, 'G0_safety_asr', 'G0_safety_asr_ci')} | "
+            f"{_cell(row, 'G1_safety_asr', 'G1_safety_asr_ci')} | "
+            f"{_cell(row, 'G2_safety_asr', 'G2_safety_asr_ci')} |"
         )
 
     lines += [
@@ -141,14 +162,19 @@ def render_paper_report(
     ]
     for row in ablation.get("g1_comparison") or []:
         lines.append(
-            f"| {row.get('input_mode')} | {_fmt(row.get('safety_asr'))} "
-            f"| {_fmt(row.get('psr'))} | {_fmt(row.get('macro'))} "
-            f"| {_fmt(row.get('task_accuracy'))} | {_fmt(row.get('over_refusal'))} |"
+            f"| {row.get('input_mode')} | "
+            f"{_cell(row, 'safety_asr', 'safety_asr_ci')} | "
+            f"{_cell(row, 'psr', 'psr_ci')} | "
+            f"{_cell(row, 'macro', 'macro_ci')} | "
+            f"{_cell(row, 'task_accuracy', 'task_accuracy_ci')} | "
+            f"{_cell(row, 'over_refusal', 'over_refusal_ci')} |"
         )
     lines += [
         "",
         "G0 rows for rules/llm ablations are borrowed from main. "
-        "Hybrid = rules first, then LLM residual.",
+        "Hybrid = rules first, then LLM residual. "
+        "This ablation is the primary composition result: rules drive known "
+        "instruction/safety templates; hybrid slightly improves PSR; LLM-only is weak.",
         "",
     ]
 
@@ -161,10 +187,11 @@ def render_paper_report(
         ]
         for row in llm_metrics.get("table2_main") or []:
             lines.append(
-                f"| {row['guardrail']} | {_fmt(row.get('instruction_safety_asr'))} "
-                f"| {_fmt(row.get('poisoning_success_rate'))} "
-                f"| {_fmt(row.get('task_accuracy'))} "
-                f"| {_fmt(row.get('over_refusal'))} |"
+                f"| {row['guardrail']} | "
+                f"{_cell(row, 'instruction_safety_asr', 'instruction_safety_asr_ci')} | "
+                f"{_cell(row, 'poisoning_success_rate', 'poisoning_success_rate_ci')} | "
+                f"{_cell(row, 'task_accuracy', 'task_accuracy_ci')} | "
+                f"{_cell(row, 'over_refusal', 'over_refusal_ci')} |"
             )
         lines += [
             "",
@@ -182,10 +209,11 @@ def render_paper_report(
         ]
         for row in rules_metrics.get("table2_main") or []:
             lines.append(
-                f"| {row['guardrail']} | {_fmt(row.get('instruction_safety_asr'))} "
-                f"| {_fmt(row.get('poisoning_success_rate'))} "
-                f"| {_fmt(row.get('task_accuracy'))} "
-                f"| {_fmt(row.get('over_refusal'))} |"
+                f"| {row['guardrail']} | "
+                f"{_cell(row, 'instruction_safety_asr', 'instruction_safety_asr_ci')} | "
+                f"{_cell(row, 'poisoning_success_rate', 'poisoning_success_rate_ci')} | "
+                f"{_cell(row, 'task_accuracy', 'task_accuracy_ci')} | "
+                f"{_cell(row, 'over_refusal', 'over_refusal_ci')} |"
             )
         lines.append("")
 
@@ -221,12 +249,83 @@ def render_paper_report(
         "",
         "A1/A3/A4 are fully sanitized by rules. Residual `allow` is almost only A2 poisoning.",
         "",
+        "## Experiment 4 — Unseen attack transfer",
+        "",
+        "Defense was frozen before evaluating attacks generated from unseen templates "
+        "and a different generator (`deepseek`; 149/150 spans LLM-rewritten). "
+        "A2 is excluded (integrity leftover, not an instruction-template match concern). "
+        "Clean utility is not re-run.",
+        "",
+    ]
+    if transfer_metrics:
+        xt2 = transfer_metrics.get("table2_main") or []
+        xt3 = transfer_metrics.get("table3_attack_breakdown") or []
+        xt4 = transfer_metrics.get("table4_cross_model") or []
+        lines += [
+            f"Transfer conditions: {transfer_metrics.get('n_records')} "
+            f"(attack={transfer_metrics.get('n_attack_conditions')}).",
+            "",
+            "| Guardrail | Safety ASR ↓ | Acc ↑ |",
+            "|---|---:|---:|",
+        ]
+        for row in xt2:
+            lines.append(
+                f"| {row['guardrail']} | "
+                f"{_cell(row, 'instruction_safety_asr', 'instruction_safety_asr_ci')} | "
+                f"{_cell(row, 'task_accuracy', 'task_accuracy_ci')} |"
+            )
+        lines += [
+            "",
+            "| Attack | G0 | G1 | G2 |",
+            "|---|---:|---:|---:|",
+        ]
+        for row in xt3:
+            lines.append(
+                f"| {row.get('attack')} | "
+                f"{_cell(row, 'G0_success', 'G0_success_ci')} | "
+                f"{_cell(row, 'G1_success', 'G1_success_ci')} | "
+                f"{_cell(row, 'G2_success', 'G2_success_ci')} |"
+            )
+        lines += [
+            "",
+            "| Model | G0 | G1 | G2 |",
+            "|---|---:|---:|---:|",
+        ]
+        for row in xt4:
+            lines.append(
+                f"| {row.get('model')} | "
+                f"{_cell(row, 'G0_safety_asr', 'G0_safety_asr_ci')} | "
+                f"{_cell(row, 'G1_safety_asr', 'G1_safety_asr_ci')} | "
+                f"{_cell(row, 'G2_safety_asr', 'G2_safety_asr_ci')} |"
+            )
+        lines.append("")
+        if transfer_gate:
+            lines += [
+                f"- Transfer G1 decisions: `{transfer_gate.get('g1_input_decisions_attack')}`",
+                f"- Transfer G1 by attack: `{transfer_gate.get('g1_input_by_attack')}`",
+                "",
+            ]
+        lines += [
+            "A rise from 0% in-distribution ASR to a small held-out ASR is expected "
+            "and more credible than a second 0%: deterministic filters are strong on "
+            "known structures; robustness can degrade under unseen formulations.",
+            "",
+        ]
+    else:
+        lines += [
+            "_Not yet run._ `gurma -c configs/main_transfer.yaml run-transfer`",
+            "",
+        ]
+
+    lines += [
         "## Caveats",
         "",
         "- Counts are **experimental conditions**, not LLM API calls.",
-        "- A2 success is an integrity metric (PSR), not Safety ASR.",
+        "- A2 success is an integrity metric (PSR), not Safety ASR. "
+        "We do not add poisoning-specific rules to force PSR → 0.",
         "- Attack acceptance never uses G0 effectiveness (no selection bias).",
-        "- Hybrid rules match known operator templates; transfer to novel phrasing is untested.",
+        "- In-distribution hybrid rules match known operator templates; "
+        "Experiment 4 tests unseen phrasing with the defense frozen.",
         "",
     ]
     return "\n".join(lines)
@@ -239,12 +338,16 @@ def write_paper_report(out_path: Path | None = None) -> Path:
     ablation = _load(ROOT / "data/runs/ablation_compare/ablation_compare.json")
     llm_path = ROOT / "data/runs/main_ablation_llm/6_metrics/metrics.json"
     rules_path = ROOT / "data/runs/main_ablation_rules/6_metrics/metrics.json"
+    xfer_path = ROOT / "data/runs/main_transfer/6_metrics/metrics.json"
+    xfer_gate_path = ROOT / "data/runs/main_transfer/7_ablation/pilot_gate_summary.json"
     md = render_paper_report(
         main_metrics=main_metrics,
         main_gate=main_gate,
         ablation=ablation,
         llm_metrics=_load(llm_path) if llm_path.exists() else None,
         rules_metrics=_load(rules_path) if rules_path.exists() else None,
+        transfer_metrics=_load(xfer_path) if xfer_path.exists() else None,
+        transfer_gate=_load(xfer_gate_path) if xfer_gate_path.exists() else None,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(md)

@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import zlib
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from gurma.eval.bootstrap import bootstrap_ci, fmt_ci
 from gurma.eval.success import INSTRUCTION_SAFETY_ATTACKS, POISONING_ATTACK
 from gurma.io import write_json
 from gurma.schemas.models import RunRecord
+
+
+def _stable_offset(label: str, base: int) -> int:
+    return base + (zlib.adler32(label.encode("utf-8")) % 1000)
 
 
 def _rate(vals: list[bool]) -> float | None:
@@ -15,7 +21,12 @@ def _rate(vals: list[bool]) -> float | None:
     return sum(1 for v in vals if v) / len(vals)
 
 
-def aggregate_metrics(records: list[RunRecord]) -> dict[str, Any]:
+def aggregate_metrics(
+    records: list[RunRecord],
+    *,
+    bootstrap_n: int = 2000,
+    bootstrap_seed: int = 0,
+) -> dict[str, Any]:
     clean = [r for r in records if not r.attack_type or r.attack_type == "clean"]
     attacked = [r for r in records if r.attack_type and r.attack_type != "clean"]
 
@@ -46,10 +57,25 @@ def aggregate_metrics(records: list[RunRecord]) -> dict[str, Any]:
             {
                 "guardrail": g,
                 "instruction_safety_asr": _rate(safety),
+                "instruction_safety_asr_ci": bootstrap_ci(
+                    safety, n_boot=bootstrap_n, seed=bootstrap_seed
+                ),
                 "poisoning_success_rate": _rate(psr),
+                "poisoning_success_rate_ci": bootstrap_ci(
+                    psr, n_boot=bootstrap_n, seed=bootstrap_seed + 1
+                ),
                 "macro_attack_success": _rate(macro),
+                "macro_attack_success_ci": bootstrap_ci(
+                    macro, n_boot=bootstrap_n, seed=bootstrap_seed + 2
+                ),
                 "task_accuracy": _rate(acc),
+                "task_accuracy_ci": bootstrap_ci(
+                    acc, n_boot=bootstrap_n, seed=bootstrap_seed + 3
+                ),
                 "over_refusal": _rate(over_ref),
+                "over_refusal_ci": bootstrap_ci(
+                    over_ref, n_boot=bootstrap_n, seed=bootstrap_seed + 4
+                ),
                 "safety_violation_rate": _rate(safety_viol),
                 "n_attack": len(atk_g),
                 "n_clean": len(clean_g),
@@ -68,6 +94,9 @@ def aggregate_metrics(records: list[RunRecord]) -> dict[str, Any]:
                 if r.attack_type == atype and r.attack_success is not None
             ]
             row[f"{g}_success"] = _rate(vals)
+            row[f"{g}_success_ci"] = bootstrap_ci(
+                vals, n_boot=bootstrap_n, seed=_stable_offset(f"{atype}|{g}", bootstrap_seed + 10)
+            )
         table3.append(row)
 
     # Table 4: model × guardrail safety ASR
@@ -85,6 +114,9 @@ def aggregate_metrics(records: list[RunRecord]) -> dict[str, Any]:
                 and r.attack_success is not None
             ]
             row[f"{g}_safety_asr"] = _rate(vals)
+            row[f"{g}_safety_asr_ci"] = bootstrap_ci(
+                vals, n_boot=bootstrap_n, seed=_stable_offset(f"{model}|{g}", bootstrap_seed + 20)
+            )
         table4.append(row)
 
     table1 = {
@@ -127,8 +159,10 @@ def aggregate_metrics(records: list[RunRecord]) -> dict[str, Any]:
         "note": (
             "Instruction/Safety ASR excludes context_poisoning (reported as PSR). "
             "Macro attack success averages all four attack types. "
-            "Counts are experimental conditions, not LLM API calls."
+            "Counts are experimental conditions, not LLM API calls. "
+            "Brackets are 95% bootstrap CIs."
         ),
+        "bootstrap_n": bootstrap_n,
     }
 
 
@@ -152,22 +186,51 @@ def metrics_to_markdown(metrics: dict[str, Any]) -> str:
             return "—" if x is None else f"{x:.3f}"
 
         lines.append(
-            f"| {row['guardrail']} | {fmt(row['instruction_safety_asr'])} | "
-            f"{fmt(row['poisoning_success_rate'])} | {fmt(row['macro_attack_success'])} | "
-            f"{fmt(row['task_accuracy'])} | {fmt(row['over_refusal'])} |"
+            f"| {row['guardrail']} | "
+            f"{fmt_ci(row['instruction_safety_asr'], row.get('instruction_safety_asr_ci'))} | "
+            f"{fmt_ci(row['poisoning_success_rate'], row.get('poisoning_success_rate_ci'))} | "
+            f"{fmt_ci(row['macro_attack_success'], row.get('macro_attack_success_ci'))} | "
+            f"{fmt_ci(row['task_accuracy'], row.get('task_accuracy_ci'))} | "
+            f"{fmt_ci(row['over_refusal'], row.get('over_refusal_ci'))} |"
         )
-    lines += ["", "## Table 3 — Attack breakdown", ""]
+    lines += [
+        "",
+        "## Table 3 — Attack breakdown",
+        "",
+        "| Attack | G0 | G1 | G2 |",
+        "|---|---:|---:|---:|",
+    ]
     for row in metrics.get("table3_attack_breakdown") or []:
-        lines.append(f"- {row}")
-    lines += ["", "## Table 4 — Cross-model Safety ASR", ""]
+        cells = [str(row.get("attack"))]
+        for g in ("G0", "G1", "G2"):
+            cells.append(fmt_ci(row.get(f"{g}_success"), row.get(f"{g}_success_ci")))
+        lines.append("| " + " | ".join(cells) + " |")
+    lines += [
+        "",
+        "## Table 4 — Cross-model Safety ASR",
+        "",
+        "| Model | G0 | G1 | G2 |",
+        "|---|---:|---:|---:|",
+    ]
     for row in metrics.get("table4_cross_model") or []:
-        lines.append(f"- {row}")
+        cells = [str(row.get("model"))]
+        for g in ("G0", "G1", "G2"):
+            cells.append(fmt_ci(row.get(f"{g}_safety_asr"), row.get(f"{g}_safety_asr_ci")))
+        lines.append("| " + " | ".join(cells) + " |")
     lines.append("")
     return "\n".join(lines)
 
 
-def write_metrics_report(path: Path, records: list[RunRecord]) -> dict[str, Any]:
-    metrics = aggregate_metrics(records)
+def write_metrics_report(
+    path: Path,
+    records: list[RunRecord],
+    *,
+    bootstrap_n: int = 2000,
+    bootstrap_seed: int = 0,
+) -> dict[str, Any]:
+    metrics = aggregate_metrics(
+        records, bootstrap_n=bootstrap_n, bootstrap_seed=bootstrap_seed
+    )
     write_json(path / "metrics.json", metrics)
     (path / "metrics.md").write_text(metrics_to_markdown(metrics))
     return metrics

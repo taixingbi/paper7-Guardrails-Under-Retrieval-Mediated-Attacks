@@ -80,6 +80,17 @@ gurma paper-report
 
 Writes [reports/paper7_results.md](reports/paper7_results.md) from saved `metrics.json` (no LLM).
 
+## Experiment 4 — unseen attack transfer
+
+Defense stays frozen. Held-out templates + `deepseek` generator; no clean re-run.
+
+```bash
+gurma -c configs/main_transfer.yaml run-transfer
+gurma paper-report
+```
+
+50 seeds × A1/A3/A4 × G0/G1/G2 × 2 models = 900 conditions.
+
 ## Metrics
 
 - **Instruction/Safety ASR** — A1, A3, A4 (lower better)

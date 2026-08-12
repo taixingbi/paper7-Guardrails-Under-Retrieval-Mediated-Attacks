@@ -55,15 +55,19 @@ def reuse_frozen_stages(cfg: AppConfig) -> tuple[list[ValidatedSeed], list[Valid
 
 
 def stage_generate_attacks(cfg: AppConfig, seeds: list[ValidatedSeed]) -> list[AttackCase]:
+    from gurma.attacks.heldout import generate_heldout_attacks
     from gurma.attacks.operators import generate_all_attacks
 
     out = cfg.stage_dir("3_attacks") / "attacks.jsonl"
     if out.exists():
         return load_models(out, AttackCase)
     client = _client(cfg)
-    attacks = generate_all_attacks(seeds, client=client, cfg=cfg)
+    if cfg.attack_family == "held_out":
+        attacks = generate_heldout_attacks(seeds, client=client, cfg=cfg)
+    else:
+        attacks = generate_all_attacks(seeds, client=client, cfg=cfg)
     write_jsonl(out, attacks)
-    print(f"[P3] wrote {len(attacks)} attacks → {out}")
+    print(f"[P3] wrote {len(attacks)} attacks family={cfg.attack_family} → {out}")
     return attacks
 
 
@@ -90,10 +94,11 @@ def stage_runs(
     models = [cfg.models.llm_a, cfg.models.llm_b]
     jobs: list[tuple[ValidatedSeed, ValidatedAttack | None, str, str]] = []
 
-    for seed in seeds:
-        for guardrail in cfg.guardrails:
-            for model in models:
-                jobs.append((seed, None, guardrail, model))
+    if not cfg.skip_clean_runs:
+        for seed in seeds:
+            for guardrail in cfg.guardrails:
+                for model in models:
+                    jobs.append((seed, None, guardrail, model))
     for attack in attacks:
         seed = seed_by_id[attack.seed_id]
         for guardrail in cfg.guardrails:
@@ -141,7 +146,12 @@ def stage_metrics(cfg: AppConfig, records: list[RunRecord] | None = None) -> dic
     if records is None:
         records = load_models(cfg.stage_dir("5_runs") / "run_records.jsonl", RunRecord)
     records = merge_baseline_g0(cfg, records)
-    metrics = write_metrics_report(out_dir, records)
+    metrics = write_metrics_report(
+        out_dir,
+        records,
+        bootstrap_n=cfg.bootstrap_n,
+        bootstrap_seed=cfg.bootstrap_seed,
+    )
     print(f"[P6] wrote metrics → {out_dir}")
     return metrics
 
@@ -217,6 +227,38 @@ def rerun_guardrails(cfg: AppConfig, *, force: bool = True) -> None:
         print(f"[P7] wrote pilot gate → {out}")
     else:
         stage_pilot_gate(cfg)
+
+
+def reuse_frozen_seeds(cfg: AppConfig) -> list[ValidatedSeed]:
+    """Copy only frozen seeds (P1–P2). New attacks are generated separately."""
+    src = cfg.reuse_path
+    if src is None:
+        raise RuntimeError("reuse_from is not set")
+    dst = cfg.output_path
+    dst.mkdir(parents=True, exist_ok=True)
+    for stage in ("1_seeds", "2_validated_seeds"):
+        _copy_stage(src, dst, stage)
+    seeds = load_models(dst / "2_validated_seeds" / "validated_seeds.jsonl", ValidatedSeed)
+    if cfg.seed_limit and len(seeds) > cfg.seed_limit:
+        seeds = seeds[: cfg.seed_limit]
+        write_jsonl(dst / "2_validated_seeds" / "validated_seeds.jsonl", seeds)
+        print(f"[reuse] truncated to seed_limit={cfg.seed_limit}")
+    print(f"[reuse] frozen seeds={len(seeds)} (attacks will be regenerated)")
+    return seeds
+
+
+def run_transfer(cfg: AppConfig) -> None:
+    """Experiment 4: frozen defense, unseen attack templates, same seeds."""
+    if cfg.reuse_path is None:
+        raise RuntimeError("run-transfer requires reuse_from pointing at frozen main seeds")
+    cfg.attack_family = "held_out"
+    seeds = reuse_frozen_seeds(cfg)
+    attacks_raw = stage_generate_attacks(cfg, seeds)
+    client = _client(cfg)
+    attacks = stage_validate_attacks(cfg, attacks_raw, client=client)
+    records = stage_runs(cfg, seeds, attacks)
+    stage_metrics(cfg, records)
+    stage_pilot_gate(cfg)
 
 
 def rebuild_report(cfg: AppConfig) -> None:

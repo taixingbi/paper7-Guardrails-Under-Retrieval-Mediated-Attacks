@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from gurma.eval.bootstrap import fmt_ci
+
 
 DEFAULT_RUNS = {
     "hybrid": Path("data/runs/main/6_metrics/metrics.json"),
@@ -44,10 +46,15 @@ def build_ablation_report(
             {
                 "input_mode": name,
                 "safety_asr": g1.get("instruction_safety_asr"),
+                "safety_asr_ci": g1.get("instruction_safety_asr_ci"),
                 "psr": g1.get("poisoning_success_rate"),
+                "psr_ci": g1.get("poisoning_success_rate_ci"),
                 "macro": g1.get("macro_attack_success"),
+                "macro_ci": g1.get("macro_attack_success_ci"),
                 "task_accuracy": g1.get("task_accuracy"),
+                "task_accuracy_ci": g1.get("task_accuracy_ci"),
                 "over_refusal": g1.get("over_refusal"),
+                "over_refusal_ci": g1.get("over_refusal_ci"),
             }
         )
 
@@ -70,13 +77,14 @@ def build_ablation_report(
         "|---|---:|---:|---:|---:|---:|",
     ]
 
-    def fmt(x: Any) -> str:
-        return "—" if x is None else f"{float(x):.3f}"
-
     for row in rows:
         lines.append(
-            f"| {row['input_mode']} | {fmt(row['safety_asr'])} | {fmt(row['psr'])} | "
-            f"{fmt(row['macro'])} | {fmt(row['task_accuracy'])} | {fmt(row['over_refusal'])} |"
+            f"| {row['input_mode']} | "
+            f"{fmt_ci(row['safety_asr'], row.get('safety_asr_ci'))} | "
+            f"{fmt_ci(row['psr'], row.get('psr_ci'))} | "
+            f"{fmt_ci(row['macro'], row.get('macro_ci'))} | "
+            f"{fmt_ci(row['task_accuracy'], row.get('task_accuracy_ci'))} | "
+            f"{fmt_ci(row['over_refusal'], row.get('over_refusal_ci'))} |"
         )
     if missing:
         lines += ["", "## Missing", ""] + [f"- {m}" for m in missing]

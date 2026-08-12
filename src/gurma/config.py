@@ -56,6 +56,12 @@ class AppConfig(BaseModel):
     input_guardrail_mode: Literal["hybrid", "rules", "llm"] | None = None
     # Merge G0 rows from a completed run into metrics (ablation: only re-run G1/G2)
     baseline_g0_from: str | None = None
+    # in_distribution = original operators; held_out = unseen templates (Experiment 4)
+    attack_family: Literal["in_distribution", "held_out"] = "in_distribution"
+    attack_generator_model: str | None = None
+    skip_clean_runs: bool = False
+    bootstrap_n: int = 2000
+    bootstrap_seed: int = 0
     yes_no_max_fraction: float = 0.15
     max_context_chars: int = 12000
     min_context_chars: int = 200

@@ -39,3 +39,14 @@ gurma ablation-report
 # Paper-facing tables
 gurma paper-report
 ```
+
+## Experiment 4 — unseen attack transfer
+
+Defense stays frozen. New attacks use held-out templates + `deepseek` rewrites.
+
+```bash
+gurma -c configs/main_transfer.yaml run-transfer
+gurma paper-report
+```
+
+Expected conditions: `50 seeds × 3 attacks × 3 guardrails × 2 models = 900` (no clean re-run).
