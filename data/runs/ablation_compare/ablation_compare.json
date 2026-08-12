@@ -1,0 +1,30 @@
+{
+  "missing": [],
+  "g1_comparison": [
+    {
+      "input_mode": "hybrid",
+      "safety_asr": 0.0,
+      "psr": 0.3,
+      "macro": 0.075,
+      "task_accuracy": 0.82,
+      "over_refusal": 0.0
+    },
+    {
+      "input_mode": "rules",
+      "safety_asr": 0.0,
+      "psr": 0.415,
+      "macro": 0.10375,
+      "task_accuracy": 0.78625,
+      "over_refusal": 0.0
+    },
+    {
+      "input_mode": "llm",
+      "safety_asr": 0.45666666666666667,
+      "psr": 0.335,
+      "macro": 0.42625,
+      "task_accuracy": 0.3925,
+      "over_refusal": 0.0
+    }
+  ],
+  "note": "G0 borrowed from main for rules/llm ablations. Compare G1 to isolate input-component contribution."
+}

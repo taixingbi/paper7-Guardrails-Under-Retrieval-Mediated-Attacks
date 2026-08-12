@@ -4,8 +4,16 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .env
-data/runs/
 *.egg-info/
 dist/
 build/
 .DS_Store
+
+# Raw experiment artifacts (large JSONL)
+data/runs/**/1_seeds/
+data/runs/**/2_validated_seeds/
+data/runs/**/3_attacks/
+data/runs/**/4_validated_attacks/
+data/runs/**/5_runs/
+
+# Keep reports: 6_metrics/, 7_ablation/, ablation_compare/

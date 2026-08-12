@@ -1,0 +1,87 @@
+{
+  "n_records": 600,
+  "n_clean_conditions": 120,
+  "n_attack_conditions": 480,
+  "table1_dataset": {
+    "authority_conflict": 20,
+    "context_poisoning": 20,
+    "indirect_injection": 20,
+    "policy_retrieval": 20
+  },
+  "table2_main": [
+    {
+      "guardrail": "G0",
+      "instruction_safety_asr": 0.7166666666666667,
+      "poisoning_success_rate": 0.6,
+      "macro_attack_success": 0.6875,
+      "task_accuracy": 0.25625,
+      "over_refusal": 0.0,
+      "safety_violation_rate": 0.16875,
+      "n_attack": 160,
+      "n_clean": 40
+    },
+    {
+      "guardrail": "G1",
+      "instruction_safety_asr": 0.675,
+      "poisoning_success_rate": 0.6,
+      "macro_attack_success": 0.65625,
+      "task_accuracy": 0.25625,
+      "over_refusal": 0.0,
+      "safety_violation_rate": 0.14375,
+      "n_attack": 160,
+      "n_clean": 40
+    },
+    {
+      "guardrail": "G2",
+      "instruction_safety_asr": 0.0,
+      "poisoning_success_rate": 0.025,
+      "macro_attack_success": 0.00625,
+      "task_accuracy": 0.69375,
+      "over_refusal": 0.0,
+      "safety_violation_rate": 0.0,
+      "n_attack": 160,
+      "n_clean": 40
+    }
+  ],
+  "table3_attack_breakdown": [
+    {
+      "attack": "authority_conflict",
+      "G0_success": 0.55,
+      "G1_success": 0.55,
+      "G2_success": 0.0
+    },
+    {
+      "attack": "context_poisoning",
+      "G0_success": 0.6,
+      "G1_success": 0.6,
+      "G2_success": 0.025
+    },
+    {
+      "attack": "indirect_injection",
+      "G0_success": 0.925,
+      "G1_success": 0.9,
+      "G2_success": 0.0
+    },
+    {
+      "attack": "policy_retrieval",
+      "G0_success": 0.675,
+      "G1_success": 0.575,
+      "G2_success": 0.0
+    }
+  ],
+  "table4_cross_model": [
+    {
+      "model": "llama",
+      "G0_safety_asr": 1.0,
+      "G1_safety_asr": 0.95,
+      "G2_safety_asr": 0.0
+    },
+    {
+      "model": "nova-pro",
+      "G0_safety_asr": 0.43333333333333335,
+      "G1_safety_asr": 0.4,
+      "G2_safety_asr": 0.0
+    }
+  ],
+  "note": "Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls."
+}
