@@ -5,6 +5,7 @@ from pathlib import Path
 
 from gurma.config import load_config
 from gurma.eval.ablation_report import build_ablation_report
+from gurma.eval.paper_report import write_paper_report
 from gurma.eval.pilot_gate import stage_pilot_gate
 from gurma.pipeline import rebuild_report, rerun_guardrails, run_pipeline
 
@@ -50,9 +51,17 @@ def main(argv: list[str] | None = None) -> int:
         "ablation-report",
         help="Compare hybrid/rules/llm G1 metrics into data/runs/ablation_compare/",
     )
+    sub.add_parser(
+        "paper-report",
+        help="Generate reports/paper7_results.md from saved metrics JSON (no LLM)",
+    )
 
     args = parser.parse_args(argv)
-    cfg = load_config(Path(args.config)) if args.cmd != "ablation-report" else None
+    cfg = (
+        load_config(Path(args.config))
+        if args.cmd not in {"ablation-report", "paper-report"}
+        else None
+    )
     if cfg is not None and getattr(args, "skip_llm", False):
         cfg.skip_llm = True
 
@@ -70,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
         rerun_guardrails(cfg, force=True)
     elif args.cmd == "ablation-report":
         build_ablation_report()
+    elif args.cmd == "paper-report":
+        write_paper_report()
     else:
         parser.error(f"unknown command {args.cmd}")
         return 2

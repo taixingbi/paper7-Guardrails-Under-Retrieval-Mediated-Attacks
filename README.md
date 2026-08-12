@@ -72,6 +72,14 @@ gurma -c configs/main.yaml run
 | P5 | `5_runs/run_records.jsonl` |
 | P6 | `6_metrics/metrics.json` + `metrics.md` |
 
+## Paper report
+
+```bash
+gurma paper-report
+```
+
+Writes [reports/paper7_results.md](reports/paper7_results.md) from saved `metrics.json` (no LLM).
+
 ## Metrics
 
 - **Instruction/Safety ASR** — A1, A3, A4 (lower better)

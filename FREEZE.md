@@ -35,4 +35,7 @@ gurma -c configs/main_ablation_llm.yaml rerun-guardrails
 
 # Compare G1 across hybrid / rules / llm
 gurma ablation-report
+
+# Paper-facing tables
+gurma paper-report
 ```
