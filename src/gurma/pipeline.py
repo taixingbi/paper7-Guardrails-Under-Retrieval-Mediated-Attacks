@@ -47,14 +47,23 @@ def reuse_frozen_stages(cfg: AppConfig) -> tuple[list[ValidatedSeed], list[Valid
     attacks = load_models(
         dst / "4_validated_attacks" / "validated_attacks.jsonl", ValidatedAttack
     )
+    if cfg.seed_limit and len(seeds) > cfg.seed_limit:
+        keep = {s.seed_id for s in seeds[: cfg.seed_limit]}
+        seeds = [s for s in seeds if s.seed_id in keep]
+        attacks = [a for a in attacks if a.seed_id in keep]
+        write_jsonl(dst / "2_validated_seeds" / "validated_seeds.jsonl", seeds)
+        write_jsonl(dst / "4_validated_attacks" / "validated_attacks.jsonl", attacks)
+        print(f"[reuse] truncated to seed_limit={cfg.seed_limit}")
     print(
         f"[reuse] frozen seeds={len(seeds)} attacks={len(attacks)} "
-        f"guardrail_prompt_version={cfg.guardrail_prompt_version}"
+        f"guardrail_prompt_version={cfg.guardrail_prompt_version} "
+        f"input_mode={cfg.effective_input_mode()}"
     )
     return seeds, attacks
 
 
 def stage_generate_attacks(cfg: AppConfig, seeds: list[ValidatedSeed]) -> list[AttackCase]:
+    from gurma.attacks.adaptive import generate_adaptive_attacks
     from gurma.attacks.heldout import generate_heldout_attacks
     from gurma.attacks.operators import generate_all_attacks
 
@@ -64,6 +73,8 @@ def stage_generate_attacks(cfg: AppConfig, seeds: list[ValidatedSeed]) -> list[A
     client = _client(cfg)
     if cfg.attack_family == "held_out":
         attacks = generate_heldout_attacks(seeds, client=client, cfg=cfg)
+    elif cfg.attack_family == "adaptive":
+        attacks = generate_adaptive_attacks(seeds, client=client, cfg=cfg)
     else:
         attacks = generate_all_attacks(seeds, client=client, cfg=cfg)
     write_jsonl(out, attacks)
@@ -91,7 +102,7 @@ def stage_runs(
     output_guard = OutputGuardrail(guard_client, cfg)
 
     seed_by_id = {s.seed_id: s for s in seeds}
-    models = [cfg.models.llm_a, cfg.models.llm_b]
+    models = cfg.answer_model_list()
     jobs: list[tuple[ValidatedSeed, ValidatedAttack | None, str, str]] = []
 
     if not cfg.skip_clean_runs:
@@ -164,9 +175,20 @@ def merge_baseline_g0(cfg: AppConfig, records: list[RunRecord]) -> list[RunRecor
     if not path.exists():
         raise FileNotFoundError(f"baseline_g0_from missing: {path}")
     base = load_models(path, RunRecord)
-    g0 = [r for r in base if r.guardrail == "G0"]
     rest = [r for r in records if r.guardrail != "G0"]
-    print(f"[ablation] merged G0={len(g0)} from {path} + new={len(rest)}")
+    keep_seeds = {r.seed_id for r in rest} or {r.seed_id for r in records}
+    keep_models = set(cfg.answer_model_list())
+    g0 = [
+        r
+        for r in base
+        if r.guardrail == "G0"
+        and r.seed_id in keep_seeds
+        and r.model in keep_models
+    ]
+    print(
+        f"[ablation] merged G0={len(g0)} from {path} "
+        f"(filtered seeds={len(keep_seeds)} models={sorted(keep_models)}) + new={len(rest)}"
+    )
     return g0 + rest
 
 
@@ -248,10 +270,12 @@ def reuse_frozen_seeds(cfg: AppConfig) -> list[ValidatedSeed]:
 
 
 def run_transfer(cfg: AppConfig) -> None:
-    """Experiment 4: frozen defense, unseen attack templates, same seeds."""
+    """Experiment 4 / adaptive: frozen defense, new attack family, same seeds."""
     if cfg.reuse_path is None:
         raise RuntimeError("run-transfer requires reuse_from pointing at frozen main seeds")
-    cfg.attack_family = "held_out"
+    if cfg.attack_family not in {"held_out", "adaptive"}:
+        # Default held_out for backward compatibility
+        cfg.attack_family = "held_out"
     seeds = reuse_frozen_seeds(cfg)
     attacks_raw = stage_generate_attacks(cfg, seeds)
     client = _client(cfg)

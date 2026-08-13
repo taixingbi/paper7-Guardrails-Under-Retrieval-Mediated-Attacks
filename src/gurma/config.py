@@ -19,6 +19,17 @@ class ModelsConfig(BaseModel):
     llm_b: str = "llama"
     guardrail: str = "gpt-oss"
     judge: str = "gpt-oss"
+    # If set, overrides [llm_a, llm_b] for answer conditions
+    answer_models: list[str] | None = None
+
+
+InputGuardrailMode = Literal[
+    "hybrid",
+    "rules",
+    "llm",
+    "pi_detector",
+    "moderation",
+]
 
 
 class AppConfig(BaseModel):
@@ -26,7 +37,7 @@ class AppConfig(BaseModel):
     output_dir: str = "data/runs/smoke"
     seed_limit: int = 20
     candidate_limit: int = 60
-    # both = freeze requires both models correct (reported tables)
+    # both = freeze requires all answer models correct (reported tables)
     # either = debug candidate yield only
     clean_pass_mode: Literal["both", "either"] = "both"
     models: ModelsConfig = Field(default_factory=ModelsConfig)
@@ -43,21 +54,24 @@ class AppConfig(BaseModel):
     chat: ChatConfig = Field(default_factory=ChatConfig)
     llm_concurrency: int = 4
     http_retries: int = 5
+    seed_source: Literal["hotpot", "squad"] = "hotpot"
     hotpot_dataset: str = "hotpotqa/hotpot_qa"
     hotpot_split: str = "validation"
     hotpot_config: str = "distractor"
+    squad_dataset: str = "rajpurkar/squad"
+    squad_split: str = "validation"
     skip_llm: bool = False
     use_fixture_seeds: bool = False
     fixture_seeds_path: str = "data/fixtures/fixture_seeds.jsonl"
     reuse_from: str | None = None
     # Legacy flag; prefer input_guardrail_mode
     input_hybrid: bool = False
-    # hybrid = rules then LLM; rules = rules only; llm = LLM only
-    input_guardrail_mode: Literal["hybrid", "rules", "llm"] | None = None
+    # hybrid/rules/llm = GURMA; pi_detector/moderation = external baselines
+    input_guardrail_mode: InputGuardrailMode | None = None
     # Merge G0 rows from a completed run into metrics (ablation: only re-run G1/G2)
     baseline_g0_from: str | None = None
-    # in_distribution = original operators; held_out = unseen templates (Experiment 4)
-    attack_family: Literal["in_distribution", "held_out"] = "in_distribution"
+    # in_distribution | held_out | adaptive
+    attack_family: Literal["in_distribution", "held_out", "adaptive"] = "in_distribution"
     attack_generator_model: str | None = None
     skip_clean_runs: bool = False
     bootstrap_n: int = 2000
@@ -65,6 +79,7 @@ class AppConfig(BaseModel):
     yes_no_max_fraction: float = 0.15
     max_context_chars: int = 12000
     min_context_chars: int = 200
+    track_latency: bool = True
 
     @property
     def output_path(self) -> Path:
@@ -74,7 +89,15 @@ class AppConfig(BaseModel):
     def reuse_path(self) -> Path | None:
         return Path(self.reuse_from) if self.reuse_from else None
 
-    def effective_input_mode(self) -> Literal["hybrid", "rules", "llm"]:
+    def answer_model_list(self) -> list[str]:
+        if self.models.answer_models:
+            return list(self.models.answer_models)
+        return [self.models.llm_a, self.models.llm_b]
+
+    def seed_id_prefix(self) -> str:
+        return "sq_" if self.seed_source == "squad" else "hp_"
+
+    def effective_input_mode(self) -> InputGuardrailMode:
         if self.input_guardrail_mode is not None:
             return self.input_guardrail_mode
         return "hybrid" if self.input_hybrid else "llm"

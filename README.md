@@ -91,6 +91,24 @@ gurma paper-report
 
 50 seeds × A1/A3/A4 × G0/G1/G2 × 2 models = 900 conditions.
 
+## Stronger paper experiments (P0–P2)
+
+```bash
+# External baselines
+gurma -c configs/main_baseline_pi.yaml rerun-guardrails
+gurma -c configs/main_baseline_mod.yaml rerun-guardrails
+gurma baseline-compare
+
+# Adaptive attacker
+gurma -c configs/main_adaptive.yaml run-transfer
+
+# Cross-dataset (SQuAD)
+gurma -c configs/main_squad.yaml run
+
+# Third target model
+gurma -c configs/main_third_model.yaml rerun-guardrails
+```
+
 ## Metrics
 
 - **Instruction/Safety ASR** — A1, A3, A4 (lower better)

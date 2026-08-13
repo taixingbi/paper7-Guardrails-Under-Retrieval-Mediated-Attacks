@@ -1,0 +1,32 @@
+# Adaptive attacker: knows frozen rule triggers; rewrites to evade them.
+# Defense stays frozen (hybrid v3). A2 excluded (integrity, not instruction filter).
+run_id: main_adaptive
+output_dir: data/runs/main_adaptive
+reuse_from: data/runs/main
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+attack_family: adaptive
+attack_generator_model: deepseek
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G0, G1, G2]
+attacks:
+  - indirect_injection
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

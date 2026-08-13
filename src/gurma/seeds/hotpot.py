@@ -125,7 +125,12 @@ def stage_build_seeds(cfg: AppConfig) -> list[CleanSeed]:
     out = cfg.stage_dir("1_seeds") / "clean_seeds.jsonl"
     if out.exists():
         return load_models(out, CleanSeed)
-    seeds = load_hotpot_candidates(cfg)
+    if cfg.seed_source == "squad":
+        from gurma.seeds.squad import load_squad_candidates
+
+        seeds = load_squad_candidates(cfg)
+    else:
+        seeds = load_hotpot_candidates(cfg)
     write_jsonl(out, seeds)
-    print(f"[P1] wrote {len(seeds)} candidates → {out}")
+    print(f"[P1] wrote {len(seeds)} candidates source={cfg.seed_source} → {out}")
     return seeds

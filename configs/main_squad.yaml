@@ -1,0 +1,38 @@
+# Cross-dataset transfer: SQuAD single-hop; HotpotQA defense frozen (no retune).
+run_id: main_squad
+output_dir: data/runs/main_squad
+seed_limit: 50
+candidate_limit: 200
+clean_pass_mode: both
+seed_source: squad
+squad_dataset: rajpurkar/squad
+squad_split: validation
+use_fixture_seeds: false
+skip_llm: false
+skip_clean_runs: false
+attack_family: in_distribution
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G0, G1, G2]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+min_context_chars: 80
+max_context_chars: 12000
+track_latency: true

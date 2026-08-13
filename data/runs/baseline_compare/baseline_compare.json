@@ -1,0 +1,141 @@
+{
+  "missing": [],
+  "g1_comparison": [
+    {
+      "defense": "hybrid",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 600,
+        "n_boot": 2000
+      },
+      "psr": 0.3,
+      "psr_ci": {
+        "low": 0.235,
+        "high": 0.36,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.82,
+      "task_accuracy_ci": {
+        "low": 0.79375,
+        "high": 0.84625,
+        "n": 800,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": null,
+      "mean_llm_calls": null,
+      "n_attack": 800
+    },
+    {
+      "defense": "rules",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 600,
+        "n_boot": 2000
+      },
+      "psr": 0.415,
+      "psr_ci": {
+        "low": 0.345,
+        "high": 0.48,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.78625,
+      "task_accuracy_ci": {
+        "low": 0.7575,
+        "high": 0.81375,
+        "n": 800,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": null,
+      "mean_llm_calls": null,
+      "n_attack": 800
+    },
+    {
+      "defense": "llm",
+      "safety_asr": 0.45666666666666667,
+      "safety_asr_ci": {
+        "low": 0.4166666666666667,
+        "high": 0.49666666666666665,
+        "n": 600,
+        "n_boot": 2000
+      },
+      "psr": 0.335,
+      "psr_ci": {
+        "low": 0.27,
+        "high": 0.405,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.3925,
+      "task_accuracy_ci": {
+        "low": 0.35875,
+        "high": 0.42625,
+        "n": 800,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": null,
+      "mean_llm_calls": null,
+      "n_attack": 800
+    },
+    {
+      "defense": "pi_detector",
+      "safety_asr": 0.4033333333333333,
+      "safety_asr_ci": {
+        "low": 0.35333333333333333,
+        "high": 0.4633333333333333,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "psr": 0.55,
+      "psr_ci": {
+        "low": 0.45,
+        "high": 0.65,
+        "n": 100,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.47,
+      "task_accuracy_ci": {
+        "low": 0.4225,
+        "high": 0.52,
+        "n": 400,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 1138.048475,
+      "mean_llm_calls": 1.0,
+      "n_attack": 400
+    },
+    {
+      "defense": "moderation",
+      "safety_asr": 0.37666666666666665,
+      "safety_asr_ci": {
+        "low": 0.32,
+        "high": 0.43333333333333335,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "psr": 0.48,
+      "psr_ci": {
+        "low": 0.38,
+        "high": 0.58,
+        "n": 100,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.225,
+      "task_accuracy_ci": {
+        "low": 0.185,
+        "high": 0.2675,
+        "n": 400,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 4461.147825,
+      "mean_llm_calls": 1.6475,
+      "n_attack": 400
+    }
+  ],
+  "note": "G1-only comparison across GURMA input modes and external baselines. pi_detector / moderation are not GURMA template rules. Baseline runs may use seed_limit=50; check n_attack."
+}

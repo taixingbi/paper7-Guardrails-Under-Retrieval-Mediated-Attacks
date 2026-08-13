@@ -132,9 +132,174 @@ Transfer conditions: 900 (attack=900).
 
 A rise from 0% in-distribution ASR to a small held-out ASR is expected and more credible than a second 0%: deterministic filters are strong on known structures; robustness can degrade under unseen formulations.
 
+
+## External baselines & input paradigms (G1)
+
+Compare hybrid / rules / LLM / classic PI detector / LLM moderation.
+
+# Defense Comparison (G1)
+
+G1-only comparison across GURMA input modes and external baselines. pi_detector / moderation are not GURMA template rules. Baseline runs may use seed_limit=50; check n_attack.
+
+| Defense | Safety ASR | PSR | Acc | mean ms | LLM calls | n |
+|---|---:|---:|---:|---:|---:|---:|
+| hybrid | 0.000 [0.000, 0.000] | 0.300 [0.235, 0.360] | 0.820 [0.794, 0.846] | — | — | 800 |
+| rules | 0.000 [0.000, 0.000] | 0.415 [0.345, 0.480] | 0.786 [0.757, 0.814] | — | — | 800 |
+| llm | 0.457 [0.417, 0.497] | 0.335 [0.270, 0.405] | 0.393 [0.359, 0.426] | — | — | 800 |
+| pi_detector | 0.403 [0.353, 0.463] | 0.550 [0.450, 0.650] | 0.470 [0.422, 0.520] | 1138.0 | 1.00 | 400 |
+| moderation | 0.377 [0.320, 0.433] | 0.480 [0.380, 0.580] | 0.225 [0.185, 0.268] | 4461.1 | 1.65 | 400 |
+
+
+## Adaptive attacks (frozen defense)
+
+Attacker avoids known rule triggers while preserving the malicious objective.
+
+# GURMA Metrics
+
+Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls. Brackets are 95% bootstrap CIs. Latency/LLM-call stats come from RunRecord.metadata when tracked.
+
+Records: 900 (clean=0, attack=900)
+
+## Table 1 — Dataset (G0 cases / model)
+
+- authority_conflict: 50
+- indirect_injection: 50
+- policy_retrieval: 50
+
+## Table 2 — Main
+
+| Guardrail | Safety ASR | PSR | Macro | Acc | Over-refusal |
+|---|---:|---:|---:|---:|---:|
+| G0 | 0.343 [0.293, 0.397] | — | 0.343 [0.290, 0.400] | 0.697 [0.643, 0.750] | — |
+| G1 | 0.327 [0.277, 0.380] | — | 0.327 [0.273, 0.380] | 0.677 [0.623, 0.730] | — |
+| G2 | 0.000 [0.000, 0.000] | — | 0.000 [0.000, 0.000] | 0.580 [0.520, 0.637] | — |
+
+## Table 3 — Attack breakdown
+
+| Attack | G0 | G1 | G2 |
+|---|---:|---:|---:|
+| authority_conflict | 0.670 [0.580, 0.760] | 0.680 [0.590, 0.770] | 0.000 [0.000, 0.000] |
+| indirect_injection | 0.360 [0.270, 0.450] | 0.300 [0.220, 0.390] | 0.000 [0.000, 0.000] |
+| policy_retrieval | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+## Table 4 — Cross-model Safety ASR
+
+| Model | G0 | G1 | G2 |
+|---|---:|---:|---:|
+| llama | 0.333 [0.260, 0.407] | 0.327 [0.253, 0.407] | 0.000 [0.000, 0.000] |
+| nova-pro | 0.353 [0.280, 0.433] | 0.327 [0.253, 0.400] | 0.000 [0.000, 0.000] |
+
+## Cost / latency
+
+| Guardrail | n | mean ms | p50 ms | p95 ms | mean LLM calls |
+|---|---:|---:|---:|---:|---:|
+| G0 | 300 | 483.1 | 448.2 | 734.5 | 1.0 |
+| G1 | 300 | 4596.9 | 3752.1 | 10205.3 | 1.8 |
+| G2 | 300 | 5915.8 | 5027.7 | 11784.8 | 2.8 |
+
+
+## Cross-dataset (SQuAD; HotpotQA defense frozen)
+
+Same frozen hybrid v3 evaluated on single-hop SQuAD seeds.
+
+# GURMA Metrics
+
+Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls. Brackets are 95% bootstrap CIs. Latency/LLM-call stats come from RunRecord.metadata when tracked.
+
+Records: 1500 (clean=300, attack=1200)
+
+## Table 1 — Dataset (G0 cases / model)
+
+- authority_conflict: 50
+- context_poisoning: 50
+- indirect_injection: 50
+- policy_retrieval: 50
+
+## Table 2 — Main
+
+| Guardrail | Safety ASR | PSR | Macro | Acc | Over-refusal |
+|---|---:|---:|---:|---:|---:|
+| G0 | 0.460 [0.403, 0.517] | 0.570 [0.470, 0.670] | 0.487 [0.438, 0.537] | 0.395 [0.350, 0.445] | 0.000 [0.000, 0.000] |
+| G1 | 0.000 [0.000, 0.000] | 0.290 [0.200, 0.380] | 0.072 [0.048, 0.098] | 0.792 [0.752, 0.830] | 0.000 [0.000, 0.000] |
+| G2 | 0.000 [0.000, 0.000] | 0.270 [0.190, 0.360] | 0.068 [0.043, 0.092] | 0.815 [0.777, 0.853] | 0.020 [0.000, 0.050] |
+
+## Table 3 — Attack breakdown
+
+| Attack | G0 | G1 | G2 |
+|---|---:|---:|---:|
+| authority_conflict | 0.540 [0.450, 0.640] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| context_poisoning | 0.570 [0.480, 0.670] | 0.290 [0.200, 0.380] | 0.270 [0.180, 0.350] |
+| indirect_injection | 0.690 [0.600, 0.780] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| policy_retrieval | 0.150 [0.080, 0.230] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+## Table 4 — Cross-model Safety ASR
+
+| Model | G0 | G1 | G2 |
+|---|---:|---:|---:|
+| llama | 0.700 [0.627, 0.773] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| nova-pro | 0.220 [0.153, 0.293] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+## Cost / latency
+
+| Guardrail | n | mean ms | p50 ms | p95 ms | mean LLM calls |
+|---|---:|---:|---:|---:|---:|
+| G0 | 500 | 1269.4 | 512.3 | 5155.0 | 1.0 |
+| G1 | 500 | 2168.1 | 1447.7 | 7141.0 | 1.3 |
+| G2 | 500 | 3716.3 | 2876.7 | 9646.3 | 2.2 |
+
+
+## Third target model (deepseek)
+
+Frozen seeds/attacks; answer model = deepseek only.
+
+# GURMA Metrics
+
+Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls. Brackets are 95% bootstrap CIs. Latency/LLM-call stats come from RunRecord.metadata when tracked.
+
+Records: 600 (clean=0, attack=600)
+
+## Table 1 — Dataset (G0 cases / model)
+
+- authority_conflict: 50
+- context_poisoning: 50
+- indirect_injection: 50
+- policy_retrieval: 50
+
+## Table 2 — Main
+
+| Guardrail | Safety ASR | PSR | Macro | Acc | Over-refusal |
+|---|---:|---:|---:|---:|---:|
+| G0 | 0.560 [0.480, 0.640] | 0.500 [0.360, 0.640] | 0.545 [0.480, 0.615] | 0.450 [0.385, 0.520] | — |
+| G1 | 0.000 [0.000, 0.000] | 0.240 [0.140, 0.360] | 0.060 [0.030, 0.095] | 0.885 [0.835, 0.925] | — |
+| G2 | 0.000 [0.000, 0.000] | 0.200 [0.100, 0.320] | 0.050 [0.020, 0.085] | 0.900 [0.855, 0.940] | — |
+
+## Table 3 — Attack breakdown
+
+| Attack | G0 | G1 | G2 |
+|---|---:|---:|---:|
+| authority_conflict | 0.940 [0.860, 1.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| context_poisoning | 0.500 [0.360, 0.640] | 0.240 [0.120, 0.360] | 0.200 [0.100, 0.320] |
+| indirect_injection | 0.700 [0.560, 0.820] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| policy_retrieval | 0.040 [0.000, 0.100] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+## Table 4 — Cross-model Safety ASR
+
+| Model | G0 | G1 | G2 |
+|---|---:|---:|---:|
+| deepseek | 0.560 [0.480, 0.640] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+## Cost / latency
+
+| Guardrail | n | mean ms | p50 ms | p95 ms | mean LLM calls |
+|---|---:|---:|---:|---:|---:|
+| G0 | 200 | 783.9 | 526.1 | 1869.9 | 1.0 |
+| G1 | 200 | 1554.9 | 550.7 | 5822.9 | 1.1 |
+| G2 | 200 | 3100.8 | 2148.0 | 9939.3 | 2.1 |
+
 ## Caveats
 
 - Counts are **experimental conditions**, not LLM API calls.
 - A2 success is an integrity metric (PSR), not Safety ASR. We do not add poisoning-specific rules to force PSR → 0.
 - Attack acceptance never uses G0 effectiveness (no selection bias).
-- In-distribution hybrid rules match known operator templates; Experiment 4 tests unseen phrasing with the defense frozen.
+- In-distribution hybrid rules match known operator templates; Experiment 4 / adaptive / cross-dataset test generalization with the defense frozen.
+- External baselines (PI detector, moderation) are comparison systems, not retunes of the frozen hybrid.

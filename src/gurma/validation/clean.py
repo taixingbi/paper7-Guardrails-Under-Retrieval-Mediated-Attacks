@@ -122,7 +122,7 @@ def validate_seed(
     client: ChatClient | None,
     cfg: AppConfig,
 ) -> ValidatedSeed:
-    models = [cfg.models.llm_a, cfg.models.llm_b]
+    models = cfg.answer_model_list()
     if cfg.skip_llm or client is None:
         grades = _mock_grades(seed, models)
     else:
@@ -162,11 +162,12 @@ def stage_validate_seeds(cfg: AppConfig, seeds: list[CleanSeed] | None = None) -
     )
     passed = [v for v in validated if v.freeze_pass][: cfg.seed_limit]
     # Re-id frozen seeds for stability
+    prefix = cfg.seed_id_prefix()
     frozen: list[ValidatedSeed] = []
     for i, v in enumerate(passed, start=1):
         frozen.append(
             ValidatedSeed(
-                **{**v.model_dump(), "seed_id": f"hp_{i:06d}"},
+                **{**v.model_dump(), "seed_id": f"{prefix}{i:06d}"},
             )
         )
     write_jsonl(out, frozen)

@@ -50,3 +50,25 @@ gurma paper-report
 ```
 
 Expected conditions: `50 seeds × 3 attacks × 3 guardrails × 2 models = 900` (no clean re-run).
+
+## Stronger paper experiments (P0–P2)
+
+Defense freeze still applies. Prefer these over expanding HotpotQA seed count.
+
+```bash
+# External baselines (classic PI detector / LLM moderation)
+gurma -c configs/main_baseline_pi.yaml rerun-guardrails
+gurma -c configs/main_baseline_mod.yaml rerun-guardrails
+gurma baseline-compare
+
+# Adaptive attacker (knows rule triggers)
+gurma -c configs/main_adaptive.yaml run-transfer
+
+# Cross-dataset (SQuAD; freeze HotpotQA defense)
+gurma -c configs/main_squad.yaml run
+
+# Third target model
+gurma -c configs/main_third_model.yaml rerun-guardrails
+```
+
+Latency / LLM-call overhead is recorded in `RunRecord.metadata` and `6_metrics` cost tables.

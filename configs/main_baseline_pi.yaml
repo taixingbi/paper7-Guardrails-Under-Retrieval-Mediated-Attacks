@@ -1,0 +1,32 @@
+# External baseline: classic prompt-injection detector (not GURMA template rules).
+# Reuses frozen main seeds/attacks; defense comparison only (G1/G2; G0 from main).
+run_id: main_baseline_pi
+output_dir: data/runs/main_baseline_pi
+reuse_from: data/runs/main
+baseline_g0_from: data/runs/main/5_runs/run_records.jsonl
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+input_hybrid: false
+input_guardrail_mode: pi_detector
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G1, G2]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

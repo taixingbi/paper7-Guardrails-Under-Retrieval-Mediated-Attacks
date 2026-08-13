@@ -6,6 +6,7 @@ from pathlib import Path
 from gurma.clients.chat import ChatClient
 from gurma.clients.json_parse import parse_json_object
 from gurma.config import AppConfig
+from gurma.guardrails.pi_detector import detect_prompt_injection, pi_audit_dict
 from gurma.guardrails.rules import sanitize_by_rules
 from gurma.schemas.models import GuardrailAudit
 
@@ -53,17 +54,40 @@ def _audit_from_rules(version: str, context: str, *, model_label: str) -> Guardr
     )
 
 
+def _audit_from_pi(version: str, context: str) -> GuardrailAudit:
+    hit = detect_prompt_injection(context)
+    return GuardrailAudit(
+        guardrail_prompt_version=version,
+        guardrail_model="pi_detector",
+        stage="input",
+        guardrail_raw_output=pi_audit_dict(hit),
+        parsed_decision=hit.decision,
+        sanitized_text=hit.sanitized_text,
+    )
+
+
 class InputGuardrail:
     def __init__(self, client: ChatClient, cfg: AppConfig) -> None:
         self.client = client
         self.cfg = cfg
         self.version = cfg.guardrail_prompt_version
-        self.system = load_prompt(self.version, "input")
         self.model = cfg.models.guardrail
         self.mode = cfg.effective_input_mode()
+        if self.mode == "moderation":
+            self.system = load_prompt("v1", "moderation")
+            self.version_label = "moderation_v1"
+        else:
+            self.system = load_prompt(self.version, "input")
+            self.version_label = self.version
 
     def check(self, question: str, context: str) -> GuardrailAudit:
+        if self.mode == "pi_detector":
+            return _audit_from_pi(self.version_label, context)
+
         if self.cfg.skip_llm:
+            if self.mode == "moderation":
+                # Offline: fall back to classic PI detector for moderation baseline
+                return _audit_from_pi("moderation_v1_heuristic", context)
             return _audit_from_rules(self.version, context, model_label="heuristic")
 
         if self.mode in {"rules", "hybrid"}:
@@ -77,7 +101,7 @@ class InputGuardrail:
             if rules_audit.parsed_decision != "allow":
                 return rules_audit
 
-        # LLM residual (hybrid allow) or LLM-only
+        # LLM residual (hybrid allow), LLM-only, or external moderation
         user = (
             f"Question:\n{question}\n\nRetrieved context:\n{context}\n\n"
             "Return JSON decision."
@@ -108,8 +132,10 @@ class InputGuardrail:
         if decision == "sanitize" and not sanitized_text:
             decision = "block"
         return GuardrailAudit(
-            guardrail_prompt_version=self.version,
-            guardrail_model=self.model,
+            guardrail_prompt_version=self.version_label,
+            guardrail_model=(
+                f"moderation:{self.model}" if self.mode == "moderation" else self.model
+            ),
             stage="input",
             guardrail_raw_output=raw or str(data),
             parsed_decision=decision,

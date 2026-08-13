@@ -1,0 +1,31 @@
+# Third target model (deepseek). Reuse frozen HotpotQA seeds/attacks; G0/G1/G2.
+run_id: main_third_model
+output_dir: data/runs/main_third_model
+reuse_from: data/runs/main
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  answer_models: [deepseek]
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G0, G1, G2]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

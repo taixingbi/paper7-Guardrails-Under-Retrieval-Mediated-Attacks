@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -18,6 +19,7 @@ class ChatResult:
     raw_message: dict[str, Any] = field(default_factory=dict)
     truncated: bool = False
     model: str = ""
+    latency_ms: float = 0.0
 
     @property
     def text(self) -> str:
@@ -136,7 +138,9 @@ class ChatClient:
                 resp.raise_for_status()
                 return resp.json()
 
+        t0 = time.perf_counter()
         data = request_with_retry(_once, retries=self.retries, label="chat")
+        latency_ms = (time.perf_counter() - t0) * 1000.0
         if data.get("error"):
             raise RuntimeError(f"chat error: {data.get('error')} {data.get('detail')}")
         choice = (data.get("choices") or [{}])[0]
@@ -161,6 +165,7 @@ class ChatClient:
             raw_message=message,
             truncated=truncated,
             model=used_model,
+            latency_ms=latency_ms,
         )
 
     def chat(

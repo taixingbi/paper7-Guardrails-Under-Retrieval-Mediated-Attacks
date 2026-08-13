@@ -317,6 +317,60 @@ def render_paper_report(
             "",
         ]
 
+    # Extended P0–P2 sections (optional if metrics exist)
+    extra_sections: list[tuple[str, Path, str]] = [
+        (
+            "## External baselines & input paradigms (G1)",
+            ROOT / "data/runs/baseline_compare/baseline_compare.md",
+            "Compare hybrid / rules / LLM / classic PI detector / LLM moderation.",
+        ),
+    ]
+    for title, path, blurb in extra_sections:
+        if path.exists():
+            lines += ["", title, "", blurb, "", path.read_text().strip(), ""]
+
+    for title, metrics_path, blurb in (
+        (
+            "## Adaptive attacks (frozen defense)",
+            ROOT / "data/runs/main_adaptive/6_metrics/metrics.md",
+            "Attacker avoids known rule triggers while preserving the malicious objective.",
+        ),
+        (
+            "## Cross-dataset (SQuAD; HotpotQA defense frozen)",
+            ROOT / "data/runs/main_squad/6_metrics/metrics.md",
+            "Same frozen hybrid v3 evaluated on single-hop SQuAD seeds.",
+        ),
+        (
+            "## Third target model (deepseek)",
+            ROOT / "data/runs/main_third_model/6_metrics/metrics.md",
+            "Frozen seeds/attacks; answer model = deepseek only.",
+        ),
+    ):
+        if metrics_path.exists():
+            lines += ["", title, "", blurb, "", metrics_path.read_text().strip(), ""]
+
+    cost = main_metrics.get("table_cost_latency") or []
+    if cost:
+        lines += [
+            "",
+            "## Safety–utility–cost (main hybrid)",
+            "",
+            "| Guardrail | n | mean ms | p50 ms | p95 ms | mean LLM calls |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+        for row in cost:
+            def fnum(x: Any) -> str:
+                return "—" if x is None else f"{float(x):.1f}"
+
+            lines.append(
+                f"| {row['guardrail']} | {row.get('n')} | "
+                f"{fnum(row.get('mean_latency_ms'))} | "
+                f"{fnum(row.get('p50_latency_ms'))} | "
+                f"{fnum(row.get('p95_latency_ms'))} | "
+                f"{fnum(row.get('mean_llm_calls'))} |"
+            )
+        lines.append("")
+
     lines += [
         "## Caveats",
         "",
@@ -325,7 +379,9 @@ def render_paper_report(
         "We do not add poisoning-specific rules to force PSR → 0.",
         "- Attack acceptance never uses G0 effectiveness (no selection bias).",
         "- In-distribution hybrid rules match known operator templates; "
-        "Experiment 4 tests unseen phrasing with the defense frozen.",
+        "Experiment 4 / adaptive / cross-dataset test generalization with the defense frozen.",
+        "- External baselines (PI detector, moderation) are comparison systems, "
+        "not retunes of the frozen hybrid.",
         "",
     ]
     return "\n".join(lines)

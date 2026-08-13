@@ -5,6 +5,7 @@ from pathlib import Path
 
 from gurma.config import load_config
 from gurma.eval.ablation_report import build_ablation_report
+from gurma.eval.baseline_compare import build_baseline_compare
 from gurma.eval.paper_report import write_paper_report
 from gurma.eval.pilot_gate import stage_pilot_gate
 from gurma.pipeline import rebuild_report, rerun_guardrails, run_pipeline, run_transfer
@@ -58,8 +59,8 @@ def main(argv: list[str] | None = None) -> int:
     p_xfer = sub.add_parser(
         "run-transfer",
         help=(
-            "Experiment 4: reuse frozen seeds, generate held-out attacks "
-            "(new templates + generator model), evaluate frozen G0/G1/G2"
+            "Reuse frozen seeds; generate held_out or adaptive attacks "
+            "(set attack_family in config); evaluate frozen G0/G1/G2"
         ),
     )
     p_xfer.add_argument(
@@ -67,11 +68,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Offline heuristics only",
     )
+    sub.add_parser(
+        "baseline-compare",
+        help="Compare hybrid/rules/llm/pi_detector/moderation G1 metrics",
+    )
 
     args = parser.parse_args(argv)
     cfg = (
         load_config(Path(args.config))
-        if args.cmd not in {"ablation-report", "paper-report"}
+        if args.cmd not in {"ablation-report", "paper-report", "baseline-compare"}
         else None
     )
     if cfg is not None and getattr(args, "skip_llm", False):
@@ -91,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
         rerun_guardrails(cfg, force=True)
     elif args.cmd == "ablation-report":
         build_ablation_report()
+    elif args.cmd == "baseline-compare":
+        build_baseline_compare()
     elif args.cmd == "paper-report":
         write_paper_report()
     elif args.cmd == "run-transfer":
