@@ -232,24 +232,26 @@ def metrics_to_markdown(metrics: dict[str, Any]) -> str:
         "",
         "## Table 3 — Attack breakdown",
         "",
-        "| Attack | G0 | G1 | G2 |",
-        "|---|---:|---:|---:|",
     ]
+    guard_order = sorted((metrics.get("table2_main") or []), key=lambda r: r["guardrail"])
+    gcols = [r["guardrail"] for r in guard_order] or ["G0", "G1", "G2"]
+    lines.append("| Attack | " + " | ".join(gcols) + " |")
+    lines.append("|---|" + "|".join(["---:"] * len(gcols)) + "|")
     for row in metrics.get("table3_attack_breakdown") or []:
         cells = [str(row.get("attack"))]
-        for g in ("G0", "G1", "G2"):
+        for g in gcols:
             cells.append(fmt_ci(row.get(f"{g}_success"), row.get(f"{g}_success_ci")))
         lines.append("| " + " | ".join(cells) + " |")
     lines += [
         "",
         "## Table 4 — Cross-model Safety ASR",
         "",
-        "| Model | G0 | G1 | G2 |",
-        "|---|---:|---:|---:|",
     ]
+    lines.append("| Model | " + " | ".join(gcols) + " |")
+    lines.append("|---|" + "|".join(["---:"] * len(gcols)) + "|")
     for row in metrics.get("table4_cross_model") or []:
         cells = [str(row.get("model"))]
-        for g in ("G0", "G1", "G2"):
+        for g in gcols:
             cells.append(fmt_ci(row.get(f"{g}_safety_asr"), row.get(f"{g}_safety_asr_ci")))
         lines.append("| " + " | ".join(cells) + " |")
     if metrics.get("table_cost_latency"):

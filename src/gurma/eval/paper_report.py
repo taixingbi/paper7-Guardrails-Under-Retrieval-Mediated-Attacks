@@ -75,6 +75,8 @@ def render_paper_report(
         "- Main conditions: 3000 (2400 attack + 600 clean); API calls ≫ 3000",
         "- Experiment 4: 50 frozen seeds × A1/A3/A4 held-out templates "
         "(generator=`deepseek`) × G0/G1/G2 × 2 models; defense not retuned",
+        "- Experiment 5: 50 seeds × A1–A4 × Q/C/O/CO × 2 models (1600); "
+        "same hybrid v3, placement only",
         "",
         "## Findings",
         "",
@@ -94,6 +96,10 @@ def render_paper_report(
         "(G1 allow ≈ 83%). G0 Safety ASR is 0.113; G1 only drops it to 0.093; "
         "G2 brings it to 0.000. Deterministic filters work on known structures; "
         "defense-in-depth matters under novel phrasing.",
+        "7. **Placement:** query-only (Q) fails (Safety ASR 0.703) because payloads "
+        "live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) "
+        "nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on "
+        "instruction attacks; residual PSR remains an integrity leftover.",
         "",
         "## Table 1 — Dataset",
         "",
@@ -330,6 +336,13 @@ def render_paper_report(
             lines += ["", title, "", blurb, "", path.read_text().strip(), ""]
 
     for title, metrics_path, blurb in (
+        (
+            "## Experiment 5 — Placement (Q / C / O / CO)",
+            ROOT / "data/runs/main_placement/6_metrics/metrics.md",
+            "Frozen hybrid v3; only *where* the guardrail is applied. "
+            "Q=query, C=context (≈G1), O=output, CO=context+output (≈G2). "
+            "50 seeds × 4 attacks × 4 placements × 2 models.",
+        ),
         (
             "## Adaptive attacks (frozen defense)",
             ROOT / "data/runs/main_adaptive/6_metrics/metrics.md",

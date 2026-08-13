@@ -11,6 +11,7 @@ Generated from frozen main + input ablations + held-out transfer. Regenerate wit
 - Defense freeze: hybrid input (`rules` first) + `v3` prompts ([FREEZE.md](../FREEZE.md))
 - Main conditions: 3000 (2400 attack + 600 clean); API calls ≫ 3000
 - Experiment 4: 50 frozen seeds × A1/A3/A4 held-out templates (generator=`deepseek`) × G0/G1/G2 × 2 models; defense not retuned
+- Experiment 5: 50 seeds × A1–A4 × Q/C/O/CO × 2 models (1600); same hybrid v3, placement only
 
 ## Findings
 
@@ -20,6 +21,7 @@ Generated from frozen main + input ablations + held-out transfer. Regenerate wit
 4. **Ablation:** rules-only also reaches Safety ASR 0.000; LLM-only remains 0.457. Hybrid mainly improves **PSR** vs rules (0.300 vs 0.415).
 5. **Limitation:** context poisoning remains (PSR ≈ 0.30 under hybrid G1/G2). This is an integrity leftover, not a missing instruction filter.
 6. **Transfer:** unseen templates mostly evade frozen rules (G1 allow ≈ 83%). G0 Safety ASR is 0.113; G1 only drops it to 0.093; G2 brings it to 0.000. Deterministic filters work on known structures; defense-in-depth matters under novel phrasing.
+7. **Placement:** query-only (Q) fails (Safety ASR 0.703) because payloads live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on instruction attacks; residual PSR remains an integrity leftover.
 
 ## Table 1 — Dataset
 
@@ -148,6 +150,58 @@ G1-only comparison across GURMA input modes and external baselines. pi_detector 
 | llm | 0.457 [0.417, 0.497] | 0.335 [0.270, 0.405] | 0.393 [0.359, 0.426] | — | — | 800 |
 | pi_detector | 0.403 [0.353, 0.463] | 0.550 [0.450, 0.650] | 0.470 [0.422, 0.520] | 1138.0 | 1.00 | 400 |
 | moderation | 0.377 [0.320, 0.433] | 0.480 [0.380, 0.580] | 0.225 [0.185, 0.268] | 4461.1 | 1.65 | 400 |
+
+
+## Experiment 5 — Placement (Q / C / O / CO)
+
+Frozen hybrid v3; only *where* the guardrail is applied. Q=query, C=context (≈G1), O=output, CO=context+output (≈G2). 50 seeds × 4 attacks × 4 placements × 2 models.
+
+# GURMA Metrics
+
+Instruction/Safety ASR excludes context_poisoning (reported as PSR). Macro attack success averages all four attack types. Counts are experimental conditions, not LLM API calls. Brackets are 95% bootstrap CIs. Latency/LLM-call stats come from RunRecord.metadata when tracked.
+
+Records: 1600 (clean=0, attack=1600)
+
+## Table 1 — Dataset (G0 cases / model)
+
+- authority_conflict: 0
+- context_poisoning: 0
+- indirect_injection: 0
+- policy_retrieval: 0
+
+## Table 2 — Main
+
+| Guardrail | Safety ASR | PSR | Macro | Acc | Over-refusal |
+|---|---:|---:|---:|---:|---:|
+| C | 0.000 [0.000, 0.000] | 0.260 [0.180, 0.350] | 0.065 [0.043, 0.090] | 0.863 [0.830, 0.895] | — |
+| CO | 0.000 [0.000, 0.000] | 0.390 [0.300, 0.490] | 0.098 [0.068, 0.128] | 0.840 [0.805, 0.873] | — |
+| O | 0.013 [0.003, 0.027] | 0.560 [0.470, 0.650] | 0.150 [0.115, 0.188] | 0.278 [0.235, 0.323] | — |
+| Q | 0.703 [0.653, 0.757] | 0.550 [0.450, 0.650] | 0.665 [0.620, 0.713] | 0.258 [0.215, 0.305] | — |
+
+## Table 3 — Attack breakdown
+
+| Attack | C | CO | O | Q |
+|---|---:|---:|---:|---:|
+| authority_conflict | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.540 [0.450, 0.640] |
+| context_poisoning | 0.260 [0.180, 0.350] | 0.390 [0.300, 0.490] | 0.560 [0.470, 0.650] | 0.550 [0.450, 0.650] |
+| indirect_injection | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.900 [0.840, 0.950] |
+| policy_retrieval | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.040 [0.010, 0.080] | 0.670 [0.580, 0.760] |
+
+## Table 4 — Cross-model Safety ASR
+
+| Model | C | CO | O | Q |
+|---|---:|---:|---:|---:|
+| llama | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.027 [0.007, 0.053] | 0.980 [0.953, 1.000] |
+| nova-pro | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.427 [0.353, 0.507] |
+
+## Cost / latency
+
+| Guardrail | n | mean ms | p50 ms | p95 ms | mean LLM calls |
+|---|---:|---:|---:|---:|---:|
+| C | 400 | 1390.8 | 423.5 | 6657.1 | 1.1 |
+| CO | 400 | 2902.4 | 1813.1 | 9197.1 | 2.1 |
+| O | 400 | 2993.0 | 2205.1 | 8019.5 | 2.0 |
+| Q | 400 | 2171.7 | 1816.0 | 4028.8 | 2.0 |
 
 
 ## Adaptive attacks (frozen defense)

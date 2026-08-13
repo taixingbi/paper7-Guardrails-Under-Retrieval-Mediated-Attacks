@@ -11,9 +11,14 @@ AttackType = Literal[
     "authority_conflict",
 ]
 
-GuardrailId = Literal["G0", "G1", "G2"]
+GuardrailId = Literal["G0", "G1", "G2", "Q", "C", "O", "CO"]
 InputDecision = Literal["allow", "sanitize", "block"]
 OutputDecision = Literal["pass", "rewrite", "block"]
+
+# E5 placement: where the (frozen) guardrail is applied
+PLACEMENT_IDS = ("Q", "C", "O", "CO")
+# Q = query only; C = context only; O = output only; CO = context + output
+
 
 
 class CleanSeed(BaseModel):

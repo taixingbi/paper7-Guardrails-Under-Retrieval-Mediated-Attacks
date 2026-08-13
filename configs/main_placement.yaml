@@ -1,0 +1,36 @@
+# E5 — Guardrail placement (Q / C / O / CO).
+# Same hybrid v3 stack as main; only the application surface changes.
+# Q  = query/user turn only (retrieval context never inspected)
+# C  = context/input only (≈ G1)
+# O  = output only (poisoned context reaches the model)
+# CO = context + output (≈ G2)
+run_id: main_placement
+output_dir: data/runs/main_placement
+reuse_from: data/runs/main
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: gpt-oss
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [Q, C, O, CO]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+bootstrap_seed: 0
+track_latency: true

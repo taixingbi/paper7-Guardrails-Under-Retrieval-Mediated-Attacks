@@ -91,6 +91,17 @@ gurma paper-report
 
 50 seeds × A1/A3/A4 × G0/G1/G2 × 2 models = 900 conditions.
 
+## Experiment 5 — placement (Q / C / O / CO)
+
+Frozen hybrid v3; only application surface changes. Reuses main attacks.
+
+```bash
+gurma -c configs/main_placement.yaml rerun-guardrails
+gurma paper-report
+```
+
+50 × 4 attacks × 4 placements × 2 models = 1600 conditions.
+
 ## Stronger paper experiments (P0–P2)
 
 ```bash

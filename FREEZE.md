@@ -51,6 +51,25 @@ gurma paper-report
 
 Expected conditions: `50 seeds × 3 attacks × 3 guardrails × 2 models = 900` (no clean re-run).
 
+## Experiment 5 — placement (Q / C / O / CO)
+
+Defense stays frozen. Same hybrid v3; only *where* it is applied changes.
+Reuses main seeds/attacks (`seed_limit: 50`).
+
+| ID | Surface |
+|----|---------|
+| Q | Query / user turn only |
+| C | Retrieved context only (≈ G1) |
+| O | Model output only |
+| CO | Context + output (≈ G2) |
+
+```bash
+gurma -c configs/main_placement.yaml rerun-guardrails
+gurma paper-report
+```
+
+Expected conditions: `50 × 4 attacks × 4 placements × 2 models = 1600` (no clean re-run).
+
 ## Stronger paper experiments (P0–P2)
 
 Defense freeze still applies. Prefer these over expanding HotpotQA seed count.

@@ -10,6 +10,11 @@ from gurma.guardrails.llm_guard import InputGuardrail, OutputGuardrail
 from gurma.schemas.models import GuardrailAudit, RunRecord, ValidatedAttack, ValidatedSeed
 from gurma.validation.clean import CLEAN_SYSTEM, build_clean_prompt
 
+# Placement / depth conditions that run an input-stage check
+_INPUT_ON_CONTEXT = {"G1", "G2", "C", "CO"}
+_INPUT_ON_QUERY = {"Q"}
+_OUTPUT_STAGE = {"G2", "O", "CO"}
+
 
 def _answer(
     client: ChatClient | None,
@@ -51,6 +56,46 @@ def _answer(
     return result.content.strip(), float(result.latency_ms), 1
 
 
+def _count_input_llm_call(cfg: AppConfig, audit: GuardrailAudit) -> int:
+    if cfg.skip_llm:
+        return 0
+    mode = cfg.effective_input_mode()
+    if mode in {"llm", "moderation"}:
+        return 1
+    if mode == "hybrid" and audit.parsed_decision == "allow":
+        return 1
+    if mode == "pi_detector":
+        return 0
+    if mode == "rules":
+        return 0
+    return 0
+
+
+def _apply_input(
+    *,
+    input_guard: InputGuardrail,
+    question: str,
+    text_to_check: str,
+    apply_to: str,  # "context" | "query"
+    cfg: AppConfig,
+) -> tuple[GuardrailAudit, str | None, bool, float, int]:
+    """Returns audit, sanitized_replacement, blocked, latency_ms, n_llm."""
+    ti = time.perf_counter()
+    # InputGuardrail.check(question, context) — for query placement, check the query
+    # as the "context" span while keeping the real question for the prompt argument.
+    if apply_to == "query":
+        audit = input_guard.check(question, text_to_check)
+    else:
+        audit = input_guard.check(question, text_to_check)
+    ms = (time.perf_counter() - ti) * 1000.0
+    n = _count_input_llm_call(cfg, audit)
+    if audit.parsed_decision == "block":
+        return audit, None, True, ms, n
+    if audit.parsed_decision == "sanitize" and audit.sanitized_text:
+        return audit, audit.sanitized_text, False, ms, n
+    return audit, None, False, ms, n
+
+
 def run_condition(
     *,
     cfg: AppConfig,
@@ -74,42 +119,56 @@ def run_condition(
     output_audit: GuardrailAudit | None = None
     refused = False
     context_used = context
+    question_used = question
     t0 = time.perf_counter()
     input_ms = 0.0
     answer_ms = 0.0
     output_ms = 0.0
     n_llm_calls = 0
+    placement = guardrail
 
-    if guardrail in {"G1", "G2"}:
-        ti = time.perf_counter()
-        input_audit = input_guard.check(question, context)
-        input_ms = (time.perf_counter() - ti) * 1000.0
-        # Count LLM input guard call for hybrid residual / llm / moderation
-        mode = cfg.effective_input_mode()
-        if mode in {"llm", "moderation"} and not cfg.skip_llm:
-            n_llm_calls += 1
-        elif mode == "hybrid" and input_audit.parsed_decision == "allow" and not cfg.skip_llm:
-            n_llm_calls += 1
-
-        if input_audit.parsed_decision == "block":
+    if guardrail in _INPUT_ON_QUERY:
+        input_audit, sanitized, blocked, input_ms, n_in = _apply_input(
+            input_guard=input_guard,
+            question=question,
+            text_to_check=question,
+            apply_to="query",
+            cfg=cfg,
+        )
+        n_llm_calls += n_in
+        if blocked:
             refused = True
             response = "[GUARDRAIL_BLOCKED]"
-            context_used = context
-        elif input_audit.parsed_decision == "sanitize" and input_audit.sanitized_text:
-            context_used = input_audit.sanitized_text
+        else:
+            if sanitized is not None:
+                question_used = sanitized
             response, answer_ms, n_ans = _answer(
                 client,
-                question=question,
+                question=question_used,
                 context=context_used,
                 model=model,
                 cfg=cfg,
                 gold_answer=gold,
             )
             n_llm_calls += n_ans
+    elif guardrail in _INPUT_ON_CONTEXT:
+        input_audit, sanitized, blocked, input_ms, n_in = _apply_input(
+            input_guard=input_guard,
+            question=question,
+            text_to_check=context,
+            apply_to="context",
+            cfg=cfg,
+        )
+        n_llm_calls += n_in
+        if blocked:
+            refused = True
+            response = "[GUARDRAIL_BLOCKED]"
         else:
+            if sanitized is not None:
+                context_used = sanitized
             response, answer_ms, n_ans = _answer(
                 client,
-                question=question,
+                question=question_used,
                 context=context_used,
                 model=model,
                 cfg=cfg,
@@ -117,6 +176,7 @@ def run_condition(
             )
             n_llm_calls += n_ans
     else:
+        # G0 or O: no input guard
         input_audit = GuardrailAudit(
             guardrail_prompt_version=cfg.guardrail_prompt_version,
             guardrail_model="none",
@@ -127,7 +187,7 @@ def run_condition(
         )
         response, answer_ms, n_ans = _answer(
             client,
-            question=question,
+            question=question_used,
             context=context_used,
             model=model,
             cfg=cfg,
@@ -135,9 +195,9 @@ def run_condition(
         )
         n_llm_calls += n_ans
 
-    if guardrail == "G2" and not refused:
+    if guardrail in _OUTPUT_STAGE and not refused:
         to = time.perf_counter()
-        output_audit = output_guard.check(question, gold, response)
+        output_audit = output_guard.check(question_used, gold, response)
         output_ms = (time.perf_counter() - to) * 1000.0
         if not cfg.skip_llm:
             n_llm_calls += 1
@@ -172,7 +232,7 @@ def run_condition(
         attack_type=attack_type or "clean",
         guardrail=guardrail,  # type: ignore[arg-type]
         model=model,
-        question=question,
+        question=question_used,
         gold_answer=gold,
         context_used=context_used,
         response=response,
@@ -186,6 +246,7 @@ def run_condition(
             "guardrail_prompt_version": cfg.guardrail_prompt_version,
             "attack_family": cfg.attack_family,
             "input_mode": cfg.effective_input_mode(),
+            "placement": placement,
             "latency_ms": {
                 "total": round(total_ms, 2),
                 "input_guard": round(input_ms, 2),
