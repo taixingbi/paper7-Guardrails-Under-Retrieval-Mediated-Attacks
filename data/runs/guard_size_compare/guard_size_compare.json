@@ -1,0 +1,114 @@
+{
+  "missing": [],
+  "g1_comparison": [
+    {
+      "guard_model": "ministral-3b",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "psr": 0.34,
+      "psr_ci": {
+        "low": 0.25,
+        "high": 0.43,
+        "n": 100,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.8475,
+      "task_accuracy_ci": {
+        "low": 0.81,
+        "high": 0.8825,
+        "n": 400,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 8534.972725,
+      "mean_llm_calls": 1.0775,
+      "n_attack": 400
+    },
+    {
+      "guard_model": "ministral-8b",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "psr": 0.41,
+      "psr_ci": {
+        "low": 0.32,
+        "high": 0.51,
+        "n": 100,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.8275,
+      "task_accuracy_ci": {
+        "low": 0.79,
+        "high": 0.86,
+        "n": 400,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 9973.440849999999,
+      "mean_llm_calls": 0.98,
+      "n_attack": 400
+    },
+    {
+      "guard_model": "ministral-14b",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 300,
+        "n_boot": 2000
+      },
+      "psr": 0.58,
+      "psr_ci": {
+        "low": 0.48,
+        "high": 0.67,
+        "n": 100,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.78,
+      "task_accuracy_ci": {
+        "low": 0.74,
+        "high": 0.8175,
+        "n": 400,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 9396.6059,
+      "mean_llm_calls": 0.985,
+      "n_attack": 400
+    },
+    {
+      "guard_model": "gpt-oss (120B, main)",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 600,
+        "n_boot": 2000
+      },
+      "psr": 0.3,
+      "psr_ci": {
+        "low": 0.235,
+        "high": 0.36,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.82,
+      "task_accuracy_ci": {
+        "low": 0.79375,
+        "high": 0.84625,
+        "n": 800,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": null,
+      "mean_llm_calls": null,
+      "n_attack": 800
+    }
+  ],
+  "note": "Frozen hybrid v3; only the guardrail LLM changes. Ministral 3B/8B/14B are a size ladder; gpt-oss is the main 120B reference (full main n may differ from seed_limit=50 Ministral runs). Rules fire first \u2014 expect limited Safety ASR movement in-distribution."
+}

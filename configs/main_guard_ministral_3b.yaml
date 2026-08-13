@@ -1,0 +1,33 @@
+# P1 — Guardrail model-size ablation (Ministral 3B).
+# Frozen hybrid v3 + main attacks; only models.guardrail changes.
+# Size ladder from https://github.com/taixingbi/mvp-bedrock/blob/main/example.md
+run_id: main_guard_ministral_3b
+output_dir: data/runs/main_guard_ministral_3b
+reuse_from: data/runs/main
+baseline_g0_from: data/runs/main/5_runs/run_records.jsonl
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: ministral-3b
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G1, G2]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

@@ -100,6 +100,10 @@ def render_paper_report(
         "live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) "
         "nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on "
         "instruction attacks; residual PSR remains an integrity leftover.",
+        "8. **Guard size:** under frozen hybrid, Ministral 3B/8B/14B all keep "
+        "Safety ASR at 0.000 (rules dominate). Scaling the residual guard LLM "
+        "does not improve PSR (0.340→0.410→0.580); gpt-oss residual stays best "
+        "(PSR 0.300). Size≠safety for in-distribution hybrid.",
         "",
         "## Table 1 — Dataset",
         "",
@@ -329,6 +333,12 @@ def render_paper_report(
             "## External baselines & input paradigms (G1)",
             ROOT / "data/runs/baseline_compare/baseline_compare.md",
             "Compare hybrid / rules / LLM / classic PI detector / LLM moderation.",
+        ),
+        (
+            "## Guardrail model-size ablation (G1)",
+            ROOT / "data/runs/guard_size_compare/guard_size_compare.md",
+            "Frozen hybrid v3; size ladder Ministral 3B/8B/14B vs gpt-oss (120B). "
+            "Aliases from mvp-bedrock example.md.",
         ),
     ]
     for title, path, blurb in extra_sections:

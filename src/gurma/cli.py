@@ -6,6 +6,7 @@ from pathlib import Path
 from gurma.config import load_config
 from gurma.eval.ablation_report import build_ablation_report
 from gurma.eval.baseline_compare import build_baseline_compare
+from gurma.eval.guard_size_compare import build_guard_size_compare
 from gurma.eval.paper_report import write_paper_report
 from gurma.eval.pilot_gate import stage_pilot_gate
 from gurma.pipeline import rebuild_report, rerun_guardrails, run_pipeline, run_transfer
@@ -72,11 +73,21 @@ def main(argv: list[str] | None = None) -> int:
         "baseline-compare",
         help="Compare hybrid/rules/llm/pi_detector/moderation G1 metrics",
     )
+    sub.add_parser(
+        "guard-size-compare",
+        help="Compare Ministral 3B/8B/14B vs gpt-oss guard LLM (G1, hybrid)",
+    )
 
     args = parser.parse_args(argv)
     cfg = (
         load_config(Path(args.config))
-        if args.cmd not in {"ablation-report", "paper-report", "baseline-compare"}
+        if args.cmd
+        not in {
+            "ablation-report",
+            "paper-report",
+            "baseline-compare",
+            "guard-size-compare",
+        }
         else None
     )
     if cfg is not None and getattr(args, "skip_llm", False):
@@ -98,6 +109,8 @@ def main(argv: list[str] | None = None) -> int:
         build_ablation_report()
     elif args.cmd == "baseline-compare":
         build_baseline_compare()
+    elif args.cmd == "guard-size-compare":
+        build_guard_size_compare()
     elif args.cmd == "paper-report":
         write_paper_report()
     elif args.cmd == "run-transfer":

@@ -80,6 +80,12 @@ gurma -c configs/main_baseline_pi.yaml rerun-guardrails
 gurma -c configs/main_baseline_mod.yaml rerun-guardrails
 gurma baseline-compare
 
+# Guardrail model-size ablation (Ministral 3B/8B/14B vs gpt-oss)
+gurma -c configs/main_guard_ministral_3b.yaml rerun-guardrails
+gurma -c configs/main_guard_ministral_8b.yaml rerun-guardrails
+gurma -c configs/main_guard_ministral_14b.yaml rerun-guardrails
+gurma guard-size-compare
+
 # Adaptive attacker (knows rule triggers)
 gurma -c configs/main_adaptive.yaml run-transfer
 

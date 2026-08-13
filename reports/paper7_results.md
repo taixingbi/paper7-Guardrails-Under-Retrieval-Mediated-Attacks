@@ -22,6 +22,7 @@ Generated from frozen main + input ablations + held-out transfer. Regenerate wit
 5. **Limitation:** context poisoning remains (PSR ≈ 0.30 under hybrid G1/G2). This is an integrity leftover, not a missing instruction filter.
 6. **Transfer:** unseen templates mostly evade frozen rules (G1 allow ≈ 83%). G0 Safety ASR is 0.113; G1 only drops it to 0.093; G2 brings it to 0.000. Deterministic filters work on known structures; defense-in-depth matters under novel phrasing.
 7. **Placement:** query-only (Q) fails (Safety ASR 0.703) because payloads live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on instruction attacks; residual PSR remains an integrity leftover.
+8. **Guard size:** under frozen hybrid, Ministral 3B/8B/14B all keep Safety ASR at 0.000 (rules dominate). Scaling the residual guard LLM does not improve PSR (0.340→0.410→0.580); gpt-oss residual stays best (PSR 0.300). Size≠safety for in-distribution hybrid.
 
 ## Table 1 — Dataset
 
@@ -150,6 +151,22 @@ G1-only comparison across GURMA input modes and external baselines. pi_detector 
 | llm | 0.457 [0.417, 0.497] | 0.335 [0.270, 0.405] | 0.393 [0.359, 0.426] | — | — | 800 |
 | pi_detector | 0.403 [0.353, 0.463] | 0.550 [0.450, 0.650] | 0.470 [0.422, 0.520] | 1138.0 | 1.00 | 400 |
 | moderation | 0.377 [0.320, 0.433] | 0.480 [0.380, 0.580] | 0.225 [0.185, 0.268] | 4461.1 | 1.65 | 400 |
+
+
+## Guardrail model-size ablation (G1)
+
+Frozen hybrid v3; size ladder Ministral 3B/8B/14B vs gpt-oss (120B). Aliases from mvp-bedrock example.md.
+
+# Guardrail model-size ablation (G1, hybrid v3)
+
+Frozen hybrid v3; only the guardrail LLM changes. Ministral 3B/8B/14B are a size ladder; gpt-oss is the main 120B reference (full main n may differ from seed_limit=50 Ministral runs). Rules fire first — expect limited Safety ASR movement in-distribution.
+
+| Guard LLM | Safety ASR | PSR | Acc | mean ms | LLM calls | n |
+|---|---:|---:|---:|---:|---:|---:|
+| ministral-3b | 0.000 [0.000, 0.000] | 0.340 [0.250, 0.430] | 0.848 [0.810, 0.882] | 8535.0 | 1.08 | 400 |
+| ministral-8b | 0.000 [0.000, 0.000] | 0.410 [0.320, 0.510] | 0.828 [0.790, 0.860] | 9973.4 | 0.98 | 400 |
+| ministral-14b | 0.000 [0.000, 0.000] | 0.580 [0.480, 0.670] | 0.780 [0.740, 0.818] | 9396.6 | 0.98 | 400 |
+| gpt-oss (120B, main) | 0.000 [0.000, 0.000] | 0.300 [0.235, 0.360] | 0.820 [0.794, 0.846] | — | — | 800 |
 
 
 ## Experiment 5 — Placement (Q / C / O / CO)
