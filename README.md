@@ -116,6 +116,13 @@ gurma -c configs/main_guard_ministral_8b.yaml rerun-guardrails
 gurma -c configs/main_guard_ministral_14b.yaml rerun-guardrails
 gurma guard-size-compare
 
+# Experiment 6 — capacity (S/M/L × LLM-only|hybrid; Nova Pro; G1)
+for cfg in main_e6_llm_s main_e6_llm_m main_e6_llm_l \
+           main_e6_hybrid_s main_e6_hybrid_m main_e6_hybrid_l; do
+  gurma -c configs/${cfg}.yaml rerun-guardrails
+done
+gurma capacity-compare
+
 # Adaptive attacker
 gurma -c configs/main_adaptive.yaml run-transfer
 

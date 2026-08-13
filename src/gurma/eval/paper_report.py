@@ -100,10 +100,12 @@ def render_paper_report(
         "live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) "
         "nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on "
         "instruction attacks; residual PSR remains an integrity leftover.",
-        "8. **Guard size:** under frozen hybrid, Ministral 3B/8B/14B all keep "
-        "Safety ASR at 0.000 (rules dominate). Scaling the residual guard LLM "
-        "does not improve PSR (0.340→0.410→0.580); gpt-oss residual stays best "
-        "(PSR 0.300). Size≠safety for in-distribution hybrid.",
+        "8. **Guard capacity (Exp 6):** on Nova Pro × G1 × 50 seeds, Safety ASR is "
+        "~0 for LLM-only and hybrid across S/M/L (ministral-3b / 14b / llama-70B). "
+        "The gap is **utility**: LLM-only Acc collapses (0.075–0.160) while hybrid "
+        "keeps Acc ≈ 0.84–0.90. Scaling does not remove the need for rules — "
+        "architecture (hybrid) dominates size for usable defense. PSR remains "
+        "non-zero under both modes.",
         "",
         "## Table 1 — Dataset",
         "",
@@ -337,8 +339,15 @@ def render_paper_report(
         (
             "## Guardrail model-size ablation (G1)",
             ROOT / "data/runs/guard_size_compare/guard_size_compare.md",
-            "Frozen hybrid v3; size ladder Ministral 3B/8B/14B vs gpt-oss (120B). "
-            "Aliases from mvp-bedrock example.md.",
+            "Earlier hybrid-only Ministral ladder (both answer models). "
+            "Prefer Experiment 6 capacity grid below when available.",
+        ),
+        (
+            "## Experiment 6 — Guard model capacity",
+            ROOT / "data/runs/e6_capacity_compare/e6_capacity_compare.md",
+            "Fixed target=nova-pro, G1/context, v3 prompts/rules, 50 seeds. "
+            "Vary guard size (ministral-3b / ministral-14b / llama-70B) × "
+            "mode (LLM-only vs hybrid). RQ1 scaling; RQ2 rules still needed?",
         ),
     ]
     for title, path, blurb in extra_sections:

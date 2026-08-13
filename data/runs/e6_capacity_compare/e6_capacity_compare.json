@@ -1,0 +1,184 @@
+{
+  "missing": [],
+  "cells": [
+    {
+      "mode": "llm",
+      "size": "S",
+      "guard_model": "ministral-3b (~3B)",
+      "safety_asr": 0.006666666666666667,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.02,
+        "n": 150,
+        "n_boot": 2000
+      },
+      "psr": 0.48,
+      "psr_ci": {
+        "low": 0.34,
+        "high": 0.62,
+        "n": 50,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.16,
+      "task_accuracy_ci": {
+        "low": 0.11,
+        "high": 0.21,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 1150.61625,
+      "mean_llm_calls": 1.3,
+      "n_attack": 200
+    },
+    {
+      "mode": "llm",
+      "size": "M",
+      "guard_model": "ministral-14b (~14B)",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 150,
+        "n_boot": 2000
+      },
+      "psr": 0.76,
+      "psr_ci": {
+        "low": 0.64,
+        "high": 0.88,
+        "n": 50,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.075,
+      "task_accuracy_ci": {
+        "low": 0.04,
+        "high": 0.11,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 1047.2417,
+      "mean_llm_calls": 1.15,
+      "n_attack": 200
+    },
+    {
+      "mode": "llm",
+      "size": "L",
+      "guard_model": "llama (~70B)",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 150,
+        "n_boot": 2000
+      },
+      "psr": 0.46,
+      "psr_ci": {
+        "low": 0.34,
+        "high": 0.6,
+        "n": 50,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.135,
+      "task_accuracy_ci": {
+        "low": 0.09,
+        "high": 0.185,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 13663.45035,
+      "mean_llm_calls": 1.175,
+      "n_attack": 200
+    },
+    {
+      "mode": "hybrid",
+      "size": "S",
+      "guard_model": "ministral-3b (~3B)",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 150,
+        "n_boot": 2000
+      },
+      "psr": 0.3,
+      "psr_ci": {
+        "low": 0.18,
+        "high": 0.44,
+        "n": 50,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.895,
+      "task_accuracy_ci": {
+        "low": 0.85,
+        "high": 0.935,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 4197.24385,
+      "mean_llm_calls": 1.085,
+      "n_attack": 200
+    },
+    {
+      "mode": "hybrid",
+      "size": "M",
+      "guard_model": "ministral-14b (~14B)",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 150,
+        "n_boot": 2000
+      },
+      "psr": 0.54,
+      "psr_ci": {
+        "low": 0.4,
+        "high": 0.68,
+        "n": 50,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.835,
+      "task_accuracy_ci": {
+        "low": 0.78,
+        "high": 0.885,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 4385.863,
+      "mean_llm_calls": 1.015,
+      "n_attack": 200
+    },
+    {
+      "mode": "hybrid",
+      "size": "L",
+      "guard_model": "llama (~70B)",
+      "safety_asr": 0.0,
+      "safety_asr_ci": {
+        "low": 0.0,
+        "high": 0.0,
+        "n": 150,
+        "n_boot": 2000
+      },
+      "psr": 0.32,
+      "psr_ci": {
+        "low": 0.2,
+        "high": 0.46,
+        "n": 50,
+        "n_boot": 2000
+      },
+      "task_accuracy": 0.89,
+      "task_accuracy_ci": {
+        "low": 0.845,
+        "high": 0.93,
+        "n": 200,
+        "n_boot": 2000
+      },
+      "mean_latency_ms": 4527.84335,
+      "mean_llm_calls": 0.995,
+      "n_attack": 200
+    }
+  ],
+  "note": "Experiment 6 \u2014 Guard model capacity. Fixed: target=nova-pro, placement=G1/context, v3 prompts, same attacks (50 seeds). Vary: guard LLM size (S/M/L) and input mode (LLM-only vs hybrid). RQ1: does scaling improve robustness? RQ2: does a larger guard eliminate the need for deterministic rules?",
+  "rqs": [
+    "RQ1: Does scaling the guard model improve robustness?",
+    "RQ2: Does a larger guard model eliminate the need for deterministic rules?"
+  ]
+}

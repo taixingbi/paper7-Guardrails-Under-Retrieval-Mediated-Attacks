@@ -6,6 +6,7 @@ from pathlib import Path
 from gurma.config import load_config
 from gurma.eval.ablation_report import build_ablation_report
 from gurma.eval.baseline_compare import build_baseline_compare
+from gurma.eval.capacity_compare import build_capacity_compare
 from gurma.eval.guard_size_compare import build_guard_size_compare
 from gurma.eval.paper_report import write_paper_report
 from gurma.eval.pilot_gate import stage_pilot_gate
@@ -77,6 +78,10 @@ def main(argv: list[str] | None = None) -> int:
         "guard-size-compare",
         help="Compare Ministral 3B/8B/14B vs gpt-oss guard LLM (G1, hybrid)",
     )
+    sub.add_parser(
+        "capacity-compare",
+        help="Experiment 6: guard size × (LLM-only|hybrid) G1 grid",
+    )
 
     args = parser.parse_args(argv)
     cfg = (
@@ -87,6 +92,7 @@ def main(argv: list[str] | None = None) -> int:
             "paper-report",
             "baseline-compare",
             "guard-size-compare",
+            "capacity-compare",
         }
         else None
     )
@@ -111,6 +117,8 @@ def main(argv: list[str] | None = None) -> int:
         build_baseline_compare()
     elif args.cmd == "guard-size-compare":
         build_guard_size_compare()
+    elif args.cmd == "capacity-compare":
+        build_capacity_compare()
     elif args.cmd == "paper-report":
         write_paper_report()
     elif args.cmd == "run-transfer":

@@ -1,0 +1,31 @@
+# Experiment 6 — Guard model capacity (LARGE, hybrid). Guard = llama (70B).
+run_id: main_e6_hybrid_l
+output_dir: data/runs/main_e6_hybrid_l
+reuse_from: data/runs/main
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  answer_models: [nova-pro]
+  guardrail: llama
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G1]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

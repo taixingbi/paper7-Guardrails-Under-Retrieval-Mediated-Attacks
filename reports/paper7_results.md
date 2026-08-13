@@ -22,7 +22,7 @@ Generated from frozen main + input ablations + held-out transfer. Regenerate wit
 5. **Limitation:** context poisoning remains (PSR ≈ 0.30 under hybrid G1/G2). This is an integrity leftover, not a missing instruction filter.
 6. **Transfer:** unseen templates mostly evade frozen rules (G1 allow ≈ 83%). G0 Safety ASR is 0.113; G1 only drops it to 0.093; G2 brings it to 0.000. Deterministic filters work on known structures; defense-in-depth matters under novel phrasing.
 7. **Placement:** query-only (Q) fails (Safety ASR 0.703) because payloads live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on instruction attacks; residual PSR remains an integrity leftover.
-8. **Guard size:** under frozen hybrid, Ministral 3B/8B/14B all keep Safety ASR at 0.000 (rules dominate). Scaling the residual guard LLM does not improve PSR (0.340→0.410→0.580); gpt-oss residual stays best (PSR 0.300). Size≠safety for in-distribution hybrid.
+8. **Guard capacity (Exp 6):** on Nova Pro × G1 × 50 seeds, Safety ASR is ~0 for LLM-only and hybrid across S/M/L (ministral-3b / 14b / llama-70B). The gap is **utility**: LLM-only Acc collapses (0.075–0.160) while hybrid keeps Acc ≈ 0.84–0.90. Scaling does not remove the need for rules — architecture (hybrid) dominates size for usable defense. PSR remains non-zero under both modes.
 
 ## Table 1 — Dataset
 
@@ -155,7 +155,7 @@ G1-only comparison across GURMA input modes and external baselines. pi_detector 
 
 ## Guardrail model-size ablation (G1)
 
-Frozen hybrid v3; size ladder Ministral 3B/8B/14B vs gpt-oss (120B). Aliases from mvp-bedrock example.md.
+Earlier hybrid-only Ministral ladder (both answer models). Prefer Experiment 6 capacity grid below when available.
 
 # Guardrail model-size ablation (G1, hybrid v3)
 
@@ -167,6 +167,40 @@ Frozen hybrid v3; only the guardrail LLM changes. Ministral 3B/8B/14B are a size
 | ministral-8b | 0.000 [0.000, 0.000] | 0.410 [0.320, 0.510] | 0.828 [0.790, 0.860] | 9973.4 | 0.98 | 400 |
 | ministral-14b | 0.000 [0.000, 0.000] | 0.580 [0.480, 0.670] | 0.780 [0.740, 0.818] | 9396.6 | 0.98 | 400 |
 | gpt-oss (120B, main) | 0.000 [0.000, 0.000] | 0.300 [0.235, 0.360] | 0.820 [0.794, 0.846] | — | — | 800 |
+
+
+## Experiment 6 — Guard model capacity
+
+Fixed target=nova-pro, G1/context, v3 prompts/rules, 50 seeds. Vary guard size (ministral-3b / ministral-14b / llama-70B) × mode (LLM-only vs hybrid). RQ1 scaling; RQ2 rules still needed?
+
+# Experiment 6 — Guard model capacity
+
+Experiment 6 — Guard model capacity. Fixed: target=nova-pro, placement=G1/context, v3 prompts, same attacks (50 seeds). Vary: guard LLM size (S/M/L) and input mode (LLM-only vs hybrid). RQ1: does scaling improve robustness? RQ2: does a larger guard eliminate the need for deterministic rules?
+
+## Full grid (G1)
+
+| Mode | Size | Guard LLM | Safety ASR | PSR | Acc | mean ms | LLM calls | n |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| llm | S | ministral-3b (~3B) | 0.007 [0.000, 0.020] | 0.480 [0.340, 0.620] | 0.160 [0.110, 0.210] | 1150.6 | 1.30 | 200 |
+| llm | M | ministral-14b (~14B) | 0.000 [0.000, 0.000] | 0.760 [0.640, 0.880] | 0.075 [0.040, 0.110] | 1047.2 | 1.15 | 200 |
+| llm | L | llama (~70B) | 0.000 [0.000, 0.000] | 0.460 [0.340, 0.600] | 0.135 [0.090, 0.185] | 13663.5 | 1.18 | 200 |
+| hybrid | S | ministral-3b (~3B) | 0.000 [0.000, 0.000] | 0.300 [0.180, 0.440] | 0.895 [0.850, 0.935] | 4197.2 | 1.08 | 200 |
+| hybrid | M | ministral-14b (~14B) | 0.000 [0.000, 0.000] | 0.540 [0.400, 0.680] | 0.835 [0.780, 0.885] | 4385.9 | 1.01 | 200 |
+| hybrid | L | llama (~70B) | 0.000 [0.000, 0.000] | 0.320 [0.200, 0.460] | 0.890 [0.845, 0.930] | 4527.8 | 0.99 | 200 |
+
+## Safety ASR by mode × size
+
+| Mode | S (3B) | M (14B) | L (70B) |
+|---|---:|---:|---:|
+| llm | 0.007 [0.000, 0.020] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| hybrid | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+
+## PSR by mode × size
+
+| Mode | S (3B) | M (14B) | L (70B) |
+|---|---:|---:|---:|
+| llm | 0.480 [0.340, 0.620] | 0.760 [0.640, 0.880] | 0.460 [0.340, 0.600] |
+| hybrid | 0.300 [0.180, 0.440] | 0.540 [0.400, 0.680] | 0.320 [0.200, 0.460] |
 
 
 ## Experiment 5 — Placement (Q / C / O / CO)

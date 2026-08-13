@@ -1,0 +1,33 @@
+# Experiment 6 — Guard model capacity (SMALL, hybrid).
+# Fixed: target=nova-pro, placement=G1/context, v3 prompts, frozen rules, 50 seeds.
+# Vary: guard LLM only. Pair with llm-only twin for RQ1/RQ2.
+run_id: main_e6_hybrid_s
+output_dir: data/runs/main_e6_hybrid_s
+reuse_from: data/runs/main
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+input_hybrid: true
+input_guardrail_mode: hybrid
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  answer_models: [nova-pro]
+  guardrail: ministral-3b
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G1]
+attacks:
+  - indirect_injection
+  - context_poisoning
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true
