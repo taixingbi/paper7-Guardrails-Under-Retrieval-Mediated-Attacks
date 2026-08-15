@@ -8,6 +8,7 @@ from typing import Any
 
 from gurma.eval.bootstrap import fmt_ci
 from gurma.eval.matched_subset import write_seed_subset_metrics
+from gurma.eval.metrics_io import cost_g1, fmt_calls, fmt_ms, g1_row
 
 MATCHED = {
     "hybrid": (
@@ -33,20 +34,6 @@ DEFAULT_RUNS = {
 }
 
 
-def _g1_row(metrics: dict[str, Any]) -> dict[str, Any] | None:
-    for row in metrics.get("table2_main") or []:
-        if row.get("guardrail") == "G1":
-            return row
-    return None
-
-
-def _cost_g1(metrics: dict[str, Any]) -> dict[str, Any]:
-    for row in metrics.get("table_cost_latency") or []:
-        if row.get("guardrail") == "G1":
-            return row
-    return {}
-
-
 def build_baseline_compare(
     runs: dict[str, Path] | None = None,
     out_dir: Path | None = None,
@@ -67,8 +54,8 @@ def build_baseline_compare(
 
     rows = []
     for name, metrics in loaded.items():
-        g1 = _g1_row(metrics) or {}
-        cost = _cost_g1(metrics)
+        g1 = g1_row(metrics)
+        cost = cost_g1(metrics)
         rows.append(
             {
                 "defense": name,
@@ -113,8 +100,8 @@ def build_baseline_compare(
             f"{fmt_ci(row['safety_asr'], row.get('safety_asr_ci'))} | "
             f"{fmt_ci(row['psr'], row.get('psr_ci'))} | "
             f"{fmt_ci(row['task_accuracy'], row.get('task_accuracy_ci'))} | "
-            f"{('—' if lat is None else f'{lat:.1f}')} | "
-            f"{('—' if calls is None else f'{calls:.2f}')} | "
+            f"{fmt_ms(lat)} | "
+            f"{fmt_calls(calls)} | "
             f"{row.get('n_attack', '—')} |"
         )
     if missing:

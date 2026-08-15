@@ -41,7 +41,7 @@ class AppConfig(BaseModel):
     # either = debug candidate yield only
     clean_pass_mode: Literal["both", "either"] = "both"
     models: ModelsConfig = Field(default_factory=ModelsConfig)
-    guardrail_prompt_version: str = "v1"
+    guardrail_prompt_version: str = "v3"
     guardrails: list[str] = Field(default_factory=lambda: ["G0", "G1", "G2"])
     attacks: list[str] = Field(
         default_factory=lambda: [
@@ -106,6 +106,26 @@ class AppConfig(BaseModel):
         return self.output_path / name
 
 
+def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    out = dict(base)
+    for key, value in overlay.items():
+        if key in out and isinstance(out[key], dict) and isinstance(value, dict):
+            out[key] = _deep_merge(out[key], value)
+        else:
+            out[key] = value
+    return out
+
+
 def load_config(path: str | Path) -> AppConfig:
-    data: dict[str, Any] = yaml.safe_load(Path(path).read_text()) or {}
+    path = Path(path)
+    data: dict[str, Any] = yaml.safe_load(path.read_text()) or {}
+    seen: set[Path] = set()
+    while "extends" in data:
+        parent = (path.parent / str(data.pop("extends"))).resolve()
+        if parent in seen:
+            raise ValueError(f"circular config extends: {parent}")
+        seen.add(parent)
+        base = yaml.safe_load(parent.read_text()) or {}
+        data = _deep_merge(base, data)
+        path = parent
     return AppConfig.model_validate(data)

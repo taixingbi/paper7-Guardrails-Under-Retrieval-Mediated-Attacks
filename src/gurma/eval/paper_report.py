@@ -60,10 +60,10 @@ def render_paper_report(
     g2_corr = main_gate.get("g2_correct_via_output_decision") or {}
 
     lines = [
-        "# Paper 7 Results Report",
+        "# GURMA Results Report",
         "",
         "Generated from frozen main + input ablations + held-out transfer. "
-        "Regenerate with `gurma paper-report`. Brackets are 95% bootstrap CIs.",
+        "Regenerate with `gurma report`. Brackets are 95% bootstrap CIs.",
         "",
         "## Setup",
         "",
@@ -432,7 +432,7 @@ def render_paper_report(
 
 
 def write_paper_report(out_path: Path | None = None) -> Path:
-    out_path = out_path or (ROOT / "reports" / "paper7_results.md")
+    out_path = out_path or (ROOT / "reports" / "results.md")
     main_metrics = _load(ROOT / "data/runs/main/6_metrics/metrics.json")
     main_gate = _load(ROOT / "data/runs/main/7_ablation/pilot_gate_summary.json")
     ablation = _load(ROOT / "data/runs/ablation_compare/ablation_compare.json")

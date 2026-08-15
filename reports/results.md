@@ -1,6 +1,6 @@
-# Paper 7 Results Report
+# GURMA Results Report
 
-Generated from frozen main + input ablations + held-out transfer. Regenerate with `gurma paper-report`. Brackets are 95% bootstrap CIs.
+Generated from frozen main + input ablations + held-out transfer. Regenerate with `gurma report`. Brackets are 95% bootstrap CIs.
 
 ## Setup
 

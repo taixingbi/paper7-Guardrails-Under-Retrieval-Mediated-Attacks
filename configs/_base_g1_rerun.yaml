@@ -1,0 +1,19 @@
+# Shared G1 rerun knobs. Overlay with `extends: _base_g1_rerun.yaml`.
+skip_llm: false
+skip_clean_runs: true
+seed_limit: 50
+guardrail_prompt_version: v3
+guardrails: [G1]
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  judge: gpt-oss
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

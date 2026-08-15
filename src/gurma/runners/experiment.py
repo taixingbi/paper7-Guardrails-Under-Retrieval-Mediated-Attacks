@@ -76,17 +76,11 @@ def _apply_input(
     input_guard: InputGuardrail,
     question: str,
     text_to_check: str,
-    apply_to: str,  # "context" | "query"
     cfg: AppConfig,
 ) -> tuple[GuardrailAudit, str | None, bool, float, int]:
     """Returns audit, sanitized_replacement, blocked, latency_ms, n_llm."""
     ti = time.perf_counter()
-    # InputGuardrail.check(question, context) — for query placement, check the query
-    # as the "context" span while keeping the real question for the prompt argument.
-    if apply_to == "query":
-        audit = input_guard.check(question, text_to_check)
-    else:
-        audit = input_guard.check(question, text_to_check)
+    audit = input_guard.check(question, text_to_check)
     ms = (time.perf_counter() - ti) * 1000.0
     n = _count_input_llm_call(cfg, audit)
     if audit.parsed_decision == "block":
@@ -132,7 +126,6 @@ def run_condition(
             input_guard=input_guard,
             question=question,
             text_to_check=question,
-            apply_to="query",
             cfg=cfg,
         )
         n_llm_calls += n_in
@@ -156,7 +149,6 @@ def run_condition(
             input_guard=input_guard,
             question=question,
             text_to_check=context,
-            apply_to="context",
             cfg=cfg,
         )
         n_llm_calls += n_in

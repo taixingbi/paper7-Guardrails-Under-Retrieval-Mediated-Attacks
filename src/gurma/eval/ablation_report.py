@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from gurma.eval.bootstrap import fmt_ci
+from gurma.eval.metrics_io import g1_row
 
 
 DEFAULT_RUNS = {
@@ -14,13 +15,6 @@ DEFAULT_RUNS = {
     "rules": Path("data/runs/main_ablation_rules/6_metrics/metrics.json"),
     "llm": Path("data/runs/main_ablation_llm/6_metrics/metrics.json"),
 }
-
-
-def _g1_row(metrics: dict[str, Any]) -> dict[str, Any] | None:
-    for row in metrics.get("table2_main") or []:
-        if row.get("guardrail") == "G1":
-            return row
-    return None
 
 
 def build_ablation_report(
@@ -41,7 +35,7 @@ def build_ablation_report(
 
     rows = []
     for name, metrics in loaded.items():
-        g1 = _g1_row(metrics) or {}
+        g1 = g1_row(metrics)
         rows.append(
             {
                 "input_mode": name,

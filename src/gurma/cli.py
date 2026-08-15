@@ -55,8 +55,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Compare hybrid/rules/llm G1 metrics into data/runs/ablation_compare/",
     )
     sub.add_parser(
-        "paper-report",
-        help="Generate reports/paper7_results.md from saved metrics JSON (no LLM)",
+        "report",
+        help="Generate reports/results.md from saved metrics JSON (no LLM)",
     )
     p_xfer = sub.add_parser(
         "run-transfer",
@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.cmd
         not in {
             "ablation-report",
-            "paper-report",
+            "report",
             "baseline-compare",
             "guard-size-compare",
             "capacity-compare",
@@ -126,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
         build_capacity_compare()
     elif args.cmd == "xfer-size-compare":
         build_xfer_size_compare()
-    elif args.cmd == "paper-report":
+    elif args.cmd == "report":
         write_paper_report()
     elif args.cmd == "run-transfer":
         assert cfg is not None

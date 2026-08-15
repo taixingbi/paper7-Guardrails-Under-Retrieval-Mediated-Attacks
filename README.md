@@ -1,4 +1,4 @@
-# paper7-Guardrails-Under-Retrieval-Mediated-Attacks
+# GURMA
 
 **GURMA** — Guardrails Under Retrieval-Mediated Attacks.
 
@@ -43,18 +43,6 @@ Offline smoke (fixtures + heuristics, no API):
 gurma -c configs/smoke.yaml run --skip-llm
 ```
 
-20-seed pilot (requires `.env` + HotpotQA download):
-
-```bash
-gurma -c configs/pilot.yaml run
-```
-
-Recompute tables only:
-
-```bash
-gurma -c configs/pilot.yaml rebuild-report
-```
-
 Main (**v3 frozen** — see [FREEZE.md](FREEZE.md); 3000 experimental conditions):
 
 ```bash
@@ -72,13 +60,13 @@ gurma -c configs/main.yaml run
 | P5 | `5_runs/run_records.jsonl` |
 | P6 | `6_metrics/metrics.json` + `metrics.md` |
 
-## Paper report
+## Results report
 
 ```bash
-gurma paper-report
+gurma report
 ```
 
-Writes [reports/paper7_results.md](reports/paper7_results.md) from saved `metrics.json` (no LLM).
+Writes [reports/results.md](reports/results.md) from saved `metrics.json` (no LLM).
 
 ## Experiment 4 — unseen attack transfer
 
@@ -86,7 +74,7 @@ Defense stays frozen. Held-out templates + `deepseek` generator; no clean re-run
 
 ```bash
 gurma -c configs/main_transfer.yaml run-transfer
-gurma paper-report
+gurma report
 ```
 
 50 seeds × A1/A3/A4 × G0/G1/G2 × 2 models = 900 conditions.
@@ -97,7 +85,7 @@ Frozen hybrid v3; only application surface changes. Reuses main attacks.
 
 ```bash
 gurma -c configs/main_placement.yaml rerun-guardrails
-gurma paper-report
+gurma report
 ```
 
 50 × 4 attacks × 4 placements × 2 models = 1600 conditions.
@@ -151,32 +139,8 @@ Per-attack success functions are type-specific (injection follow / adopt poison 
 
 ## Guardrail prompt freeze
 
-Prompts live in `prompts/guardrails/{input,output}_v1.txt`.
+Prompts live in `prompts/guardrails/{input,output}_v3.txt` (moderation baseline: `moderation_v1.txt`).
 
 Each run stores `guardrail_prompt_version`, `guardrail_model`, `guardrail_raw_output`, `parsed_decision`, `sanitized_text`.
 
-Pilot may iterate prompts; **once main starts, do not change** `guardrail_prompt_version`.
-
-## Pilot gate (after pilot run)
-
-```bash
-gurma -c configs/pilot.yaml pilot-gate
-```
-
-Writes `data/runs/pilot/7_ablation/pilot_gate.md` with G1/G2 decision distributions and rescue counts.
-
-## Iterate guardrail prompts (keep seeds/attacks frozen)
-
-```bash
-# v2: stronger LLM prompts only
-gurma -c configs/pilot_v2.yaml rerun-guardrails
-
-# v3: hybrid input (rules first + LLM residual) + strict output
-gurma -c configs/pilot_v3.yaml rerun-guardrails
-```
-
-Compare under `data/runs/pilot/` (v1) vs `pilot_v2/` vs `pilot_v3/`. Freeze prompts before main.
-
-## Out of scope until pilot story holds
-
-No real retriever, no full corpus poisoning pipeline, no extra answer LLMs, no extra guardrail vendors.
+**Do not change** `guardrail_prompt_version` after main starts. See [FREEZE.md](FREEZE.md).

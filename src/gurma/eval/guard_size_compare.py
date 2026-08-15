@@ -8,6 +8,7 @@ from typing import Any
 
 from gurma.eval.bootstrap import fmt_ci
 from gurma.eval.matched_subset import write_seed_subset_metrics
+from gurma.eval.metrics_io import cost_g1, fmt_calls, fmt_ms, g1_row
 
 # Ministral size ladder + gpt-oss (120B) on the *same* 50-seed subset.
 # Aliases from https://github.com/taixingbi/mvp-bedrock/blob/main/example.md
@@ -20,42 +21,15 @@ DEFAULT_RUNS = {
 }
 
 
-def write_matched_gptoss_metrics(
-    *,
-    main_records: Path = Path("data/runs/main/5_runs/run_records.jsonl"),
-    out_dir: Path = MATCHED_GPTOSS_DIR,
-    bootstrap_n: int = 2000,
-    bootstrap_seed: int = 0,
-) -> dict[str, Any]:
-    """Re-aggregate frozen gpt-oss hybrid main on the Ministral 50-seed subset (no LLM)."""
-    return write_seed_subset_metrics(
-        main_records,
-        out_dir,
-        bootstrap_n=bootstrap_n,
-        bootstrap_seed=bootstrap_seed,
-        label="gpt-oss hybrid",
-    )
-
-
-def _g1_row(metrics: dict[str, Any]) -> dict[str, Any] | None:
-    for row in metrics.get("table2_main") or []:
-        if row.get("guardrail") == "G1":
-            return row
-    return None
-
-
-def _cost_g1(metrics: dict[str, Any]) -> dict[str, Any]:
-    for row in metrics.get("table_cost_latency") or []:
-        if row.get("guardrail") == "G1":
-            return row
-    return {}
-
-
 def build_guard_size_compare(
     runs: dict[str, Path] | None = None,
     out_dir: Path | None = None,
 ) -> dict[str, Any]:
-    write_matched_gptoss_metrics()
+    write_seed_subset_metrics(
+        Path("data/runs/main/5_runs/run_records.jsonl"),
+        MATCHED_GPTOSS_DIR,
+        label="gpt-oss hybrid",
+    )
     runs = runs or DEFAULT_RUNS
     out_dir = out_dir or Path("data/runs/guard_size_compare")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -70,8 +44,8 @@ def build_guard_size_compare(
 
     rows = []
     for name, metrics in loaded.items():
-        g1 = _g1_row(metrics) or {}
-        cost = _cost_g1(metrics)
+        g1 = g1_row(metrics)
+        cost = cost_g1(metrics)
         rows.append(
             {
                 "guard_model": name,
@@ -116,8 +90,8 @@ def build_guard_size_compare(
             f"{fmt_ci(row['safety_asr'], row.get('safety_asr_ci'))} | "
             f"{fmt_ci(row['psr'], row.get('psr_ci'))} | "
             f"{fmt_ci(row['task_accuracy'], row.get('task_accuracy_ci'))} | "
-            f"{('—' if lat is None else f'{lat:.1f}')} | "
-            f"{('—' if calls is None else f'{calls:.2f}')} | "
+            f"{fmt_ms(lat)} | "
+            f"{fmt_calls(calls)} | "
             f"{row.get('n_attack', '—')} |"
         )
     if missing:

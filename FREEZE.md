@@ -1,4 +1,4 @@
-# Frozen defense (Paper 7 main)
+# Frozen defense (GURMA main)
 
 Locked after pilot_v3 gate review. **Do not edit prompts or hybrid flag once main starts.**
 
@@ -37,7 +37,7 @@ gurma -c configs/main_ablation_llm.yaml rerun-guardrails
 gurma ablation-report
 
 # Paper-facing tables
-gurma paper-report
+gurma report
 ```
 
 ## Experiment 4 — unseen attack transfer
@@ -46,7 +46,7 @@ Defense stays frozen. New attacks use held-out templates + `deepseek` rewrites.
 
 ```bash
 gurma -c configs/main_transfer.yaml run-transfer
-gurma paper-report
+gurma report
 ```
 
 Expected conditions: `50 seeds × 3 attacks × 3 guardrails × 2 models = 900` (no clean re-run).
@@ -65,7 +65,7 @@ Reuses main seeds/attacks (`seed_limit: 50`).
 
 ```bash
 gurma -c configs/main_placement.yaml rerun-guardrails
-gurma paper-report
+gurma report
 ```
 
 Expected conditions: `50 × 4 attacks × 4 placements × 2 models = 1600` (no clean re-run).
