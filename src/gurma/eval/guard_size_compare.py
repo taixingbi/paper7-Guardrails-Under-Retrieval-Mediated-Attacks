@@ -7,15 +7,34 @@ from pathlib import Path
 from typing import Any
 
 from gurma.eval.bootstrap import fmt_ci
+from gurma.eval.matched_subset import write_seed_subset_metrics
 
-# Ministral size ladder + frozen main gpt-oss (120B) reference.
+# Ministral size ladder + gpt-oss (120B) on the *same* 50-seed subset.
 # Aliases from https://github.com/taixingbi/mvp-bedrock/blob/main/example.md
+MATCHED_GPTOSS_DIR = Path("data/runs/main_guard_gptoss_matched50")
 DEFAULT_RUNS = {
     "ministral-3b": Path("data/runs/main_guard_ministral_3b/6_metrics/metrics.json"),
     "ministral-8b": Path("data/runs/main_guard_ministral_8b/6_metrics/metrics.json"),
     "ministral-14b": Path("data/runs/main_guard_ministral_14b/6_metrics/metrics.json"),
-    "gpt-oss (120B, main)": Path("data/runs/main/6_metrics/metrics.json"),
+    "gpt-oss (120B, matched 50)": MATCHED_GPTOSS_DIR / "6_metrics" / "metrics.json",
 }
+
+
+def write_matched_gptoss_metrics(
+    *,
+    main_records: Path = Path("data/runs/main/5_runs/run_records.jsonl"),
+    out_dir: Path = MATCHED_GPTOSS_DIR,
+    bootstrap_n: int = 2000,
+    bootstrap_seed: int = 0,
+) -> dict[str, Any]:
+    """Re-aggregate frozen gpt-oss hybrid main on the Ministral 50-seed subset (no LLM)."""
+    return write_seed_subset_metrics(
+        main_records,
+        out_dir,
+        bootstrap_n=bootstrap_n,
+        bootstrap_seed=bootstrap_seed,
+        label="gpt-oss hybrid",
+    )
 
 
 def _g1_row(metrics: dict[str, Any]) -> dict[str, Any] | None:
@@ -36,6 +55,7 @@ def build_guard_size_compare(
     runs: dict[str, Path] | None = None,
     out_dir: Path | None = None,
 ) -> dict[str, Any]:
+    write_matched_gptoss_metrics()
     runs = runs or DEFAULT_RUNS
     out_dir = out_dir or Path("data/runs/guard_size_compare")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -72,8 +92,9 @@ def build_guard_size_compare(
         "g1_comparison": rows,
         "note": (
             "Frozen hybrid v3; only the guardrail LLM changes. "
-            "Ministral 3B/8B/14B are a size ladder; gpt-oss is the main 120B reference "
-            "(full main n may differ from seed_limit=50 Ministral runs). "
+            "Ministral 3B/8B/14B vs gpt-oss 120B on the **same 50 freeze seeds** "
+            "(first 50 of main; n_attack=400 = 50×4 attacks×2 models). "
+            "gpt-oss numbers are a subset of the existing main run — no re-inference. "
             "Rules fire first — expect limited Safety ASR movement in-distribution."
         ),
     }

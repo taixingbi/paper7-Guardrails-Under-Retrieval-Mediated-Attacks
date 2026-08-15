@@ -7,11 +7,27 @@ from pathlib import Path
 from typing import Any
 
 from gurma.eval.bootstrap import fmt_ci
+from gurma.eval.matched_subset import write_seed_subset_metrics
+
+MATCHED = {
+    "hybrid": (
+        Path("data/runs/main/5_runs/run_records.jsonl"),
+        Path("data/runs/main_hybrid_matched50"),
+    ),
+    "rules": (
+        Path("data/runs/main_ablation_rules/5_runs/run_records.jsonl"),
+        Path("data/runs/main_ablation_rules_matched50"),
+    ),
+    "llm": (
+        Path("data/runs/main_ablation_llm/5_runs/run_records.jsonl"),
+        Path("data/runs/main_ablation_llm_matched50"),
+    ),
+}
 
 DEFAULT_RUNS = {
-    "hybrid": Path("data/runs/main/6_metrics/metrics.json"),
-    "rules": Path("data/runs/main_ablation_rules/6_metrics/metrics.json"),
-    "llm": Path("data/runs/main_ablation_llm/6_metrics/metrics.json"),
+    "hybrid": Path("data/runs/main_hybrid_matched50/6_metrics/metrics.json"),
+    "rules": Path("data/runs/main_ablation_rules_matched50/6_metrics/metrics.json"),
+    "llm": Path("data/runs/main_ablation_llm_matched50/6_metrics/metrics.json"),
     "pi_detector": Path("data/runs/main_baseline_pi/6_metrics/metrics.json"),
     "moderation": Path("data/runs/main_baseline_mod/6_metrics/metrics.json"),
 }
@@ -35,6 +51,8 @@ def build_baseline_compare(
     runs: dict[str, Path] | None = None,
     out_dir: Path | None = None,
 ) -> dict[str, Any]:
+    for label, (src, dest) in MATCHED.items():
+        write_seed_subset_metrics(src, dest, label=label)
     runs = runs or DEFAULT_RUNS
     out_dir = out_dir or Path("data/runs/baseline_compare")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -70,9 +88,11 @@ def build_baseline_compare(
         "missing": missing,
         "g1_comparison": rows,
         "note": (
-            "G1-only comparison across GURMA input modes and external baselines. "
-            "pi_detector / moderation are not GURMA template rules. "
-            "Baseline runs may use seed_limit=50; check n_attack."
+            "G1-only comparison on the **same 50 freeze seeds** "
+            "(n_attack=400 = 50×4 attacks×2 models). "
+            "hybrid/rules/llm are subsets of the 100-seed runs; "
+            "pi_detector / moderation were already seed_limit=50. "
+            "pi_detector / moderation are not GURMA template rules."
         ),
     }
     (out_dir / "baseline_compare.json").write_text(json.dumps(report, indent=2) + "\n")

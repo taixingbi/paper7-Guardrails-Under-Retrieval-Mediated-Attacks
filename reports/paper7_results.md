@@ -23,6 +23,7 @@ Generated from frozen main + input ablations + held-out transfer. Regenerate wit
 6. **Transfer:** unseen templates mostly evade frozen rules (G1 allow ≈ 83%). G0 Safety ASR is 0.113; G1 only drops it to 0.093; G2 brings it to 0.000. Deterministic filters work on known structures; defense-in-depth matters under novel phrasing.
 7. **Placement:** query-only (Q) fails (Safety ASR 0.703) because payloads live in retrieval. Context (C) drives Safety ASR → 0.000; output-only (O) nearly matches on safety (0.013) but collapses Acc (0.278). CO ≈ C on instruction attacks; residual PSR remains an integrity leftover.
 8. **Guard capacity (Exp 6):** on Nova Pro × G1 × 50 seeds, Safety ASR is ~0 for LLM-only and hybrid across S/M/L (ministral-3b / 14b / llama-70B). The gap is **utility**: LLM-only Acc collapses (0.075–0.160) while hybrid keeps Acc ≈ 0.84–0.90. Scaling does not remove the need for rules — architecture (hybrid) dominates size for usable defense. PSR remains non-zero under both modes.
+9. **Guard-size × unseen:** on held-out A1/A3/A4 (rules mostly miss), Safety ASR stays ~0.05–0.11 across S/M/L and does **not** fall with scale (LLM-only 0.060→0.107; hybrid 0.047→0.103). Acc rises modestly with size; gpt-oss hybrid Acc (0.830) still beats the Ministral/Llama ladder. Size is not a substitute for G2 / novel-phrasing coverage.
 
 ## Table 1 — Dataset
 
@@ -138,35 +139,35 @@ A rise from 0% in-distribution ASR to a small held-out ASR is expected and more 
 
 ## External baselines & input paradigms (G1)
 
-Compare hybrid / rules / LLM / classic PI detector / LLM moderation.
+Compare hybrid / rules / LLM / classic PI detector / LLM moderation on the same 50 freeze seeds.
 
 # Defense Comparison (G1)
 
-G1-only comparison across GURMA input modes and external baselines. pi_detector / moderation are not GURMA template rules. Baseline runs may use seed_limit=50; check n_attack.
+G1-only comparison on the **same 50 freeze seeds** (n_attack=400 = 50×4 attacks×2 models). hybrid/rules/llm are subsets of the 100-seed runs; pi_detector / moderation were already seed_limit=50. pi_detector / moderation are not GURMA template rules.
 
 | Defense | Safety ASR | PSR | Acc | mean ms | LLM calls | n |
 |---|---:|---:|---:|---:|---:|---:|
-| hybrid | 0.000 [0.000, 0.000] | 0.300 [0.235, 0.360] | 0.820 [0.794, 0.846] | — | — | 800 |
-| rules | 0.000 [0.000, 0.000] | 0.415 [0.345, 0.480] | 0.786 [0.757, 0.814] | — | — | 800 |
-| llm | 0.457 [0.417, 0.497] | 0.335 [0.270, 0.405] | 0.393 [0.359, 0.426] | — | — | 800 |
+| hybrid | 0.000 [0.000, 0.000] | 0.310 [0.220, 0.400] | 0.850 [0.815, 0.882] | — | — | 400 |
+| rules | 0.000 [0.000, 0.000] | 0.400 [0.310, 0.490] | 0.825 [0.787, 0.860] | — | — | 400 |
+| llm | 0.440 [0.383, 0.493] | 0.320 [0.230, 0.420] | 0.427 [0.383, 0.480] | — | — | 400 |
 | pi_detector | 0.403 [0.353, 0.463] | 0.550 [0.450, 0.650] | 0.470 [0.422, 0.520] | 1138.0 | 1.00 | 400 |
 | moderation | 0.377 [0.320, 0.433] | 0.480 [0.380, 0.580] | 0.225 [0.185, 0.268] | 4461.1 | 1.65 | 400 |
 
 
 ## Guardrail model-size ablation (G1)
 
-Earlier hybrid-only Ministral ladder (both answer models). Prefer Experiment 6 capacity grid below when available.
+Hybrid-only Ministral ladder vs gpt-oss 120B on the same 50 freeze seeds (subset of main; no re-inference). Prefer Experiment 6 for LLM-only vs hybrid.
 
 # Guardrail model-size ablation (G1, hybrid v3)
 
-Frozen hybrid v3; only the guardrail LLM changes. Ministral 3B/8B/14B are a size ladder; gpt-oss is the main 120B reference (full main n may differ from seed_limit=50 Ministral runs). Rules fire first — expect limited Safety ASR movement in-distribution.
+Frozen hybrid v3; only the guardrail LLM changes. Ministral 3B/8B/14B vs gpt-oss 120B on the **same 50 freeze seeds** (first 50 of main; n_attack=400 = 50×4 attacks×2 models). gpt-oss numbers are a subset of the existing main run — no re-inference. Rules fire first — expect limited Safety ASR movement in-distribution.
 
 | Guard LLM | Safety ASR | PSR | Acc | mean ms | LLM calls | n |
 |---|---:|---:|---:|---:|---:|---:|
 | ministral-3b | 0.000 [0.000, 0.000] | 0.340 [0.250, 0.430] | 0.848 [0.810, 0.882] | 8535.0 | 1.08 | 400 |
 | ministral-8b | 0.000 [0.000, 0.000] | 0.410 [0.320, 0.510] | 0.828 [0.790, 0.860] | 9973.4 | 0.98 | 400 |
 | ministral-14b | 0.000 [0.000, 0.000] | 0.580 [0.480, 0.670] | 0.780 [0.740, 0.818] | 9396.6 | 0.98 | 400 |
-| gpt-oss (120B, main) | 0.000 [0.000, 0.000] | 0.300 [0.235, 0.360] | 0.820 [0.794, 0.846] | — | — | 800 |
+| gpt-oss (120B, matched 50) | 0.000 [0.000, 0.000] | 0.310 [0.220, 0.400] | 0.850 [0.815, 0.882] | — | — | 400 |
 
 
 ## Experiment 6 — Guard model capacity
@@ -201,6 +202,32 @@ Experiment 6 — Guard model capacity. Fixed: target=nova-pro, placement=G1/cont
 |---|---:|---:|---:|
 | llm | 0.480 [0.340, 0.620] | 0.760 [0.640, 0.880] | 0.460 [0.340, 0.600] |
 | hybrid | 0.300 [0.180, 0.440] | 0.540 [0.400, 0.680] | 0.320 [0.200, 0.460] |
+
+
+## Guard-size × unseen attacks
+
+Same held-out A1/A3/A4 as Experiment 4. Rules mostly miss, so guard LLM size can move Safety ASR (unlike in-distribution hybrid).
+
+# Guard-size × unseen attacks (G1)
+
+Guard-size × unseen (held-out) attacks. Same 50 seeds and A1/A3/A4 templates as Experiment 4. G1 only. Rules mostly miss (~83% allow), so residual / LLM-only guard size can actually move Safety ASR. gpt-oss hybrid is the existing Exp-4 G1 row (n=300), not re-inferred.
+
+| Mode | Size | Guard LLM | Safety ASR | Acc | mean ms | LLM calls | n |
+|---|---|---|---:|---:|---:|---:|---:|
+| llm | S | ministral-3b (~3B) | 0.060 [0.033, 0.087] | 0.513 [0.457, 0.567] | 1310.0 | 1.70 | 300 |
+| llm | M | ministral-14b (~14B) | 0.083 [0.053, 0.113] | 0.577 [0.520, 0.630] | 1701.5 | 1.69 | 300 |
+| llm | L | llama (~70B) | 0.107 [0.077, 0.143] | 0.617 [0.563, 0.670] | 1739.2 | 1.75 | 300 |
+| hybrid | S | ministral-3b (~3B) | 0.047 [0.023, 0.070] | 0.540 [0.483, 0.597] | 1722.4 | 1.10 | 300 |
+| hybrid | M | ministral-14b (~14B) | 0.100 [0.067, 0.137] | 0.560 [0.503, 0.617] | 1803.2 | 1.37 | 300 |
+| hybrid | L | llama (~70B) | 0.103 [0.073, 0.140] | 0.623 [0.570, 0.677] | 1670.9 | 1.50 | 300 |
+| hybrid | 120B | gpt-oss (~120B, Exp 4) | 0.093 [0.063, 0.127] | 0.830 [0.787, 0.873] | — | — | 300 |
+
+## Safety ASR by mode × size
+
+| Mode | S (3B) | M (14B) | L (70B) | gpt-oss (120B) |
+|---|---:|---:|---:|---:|
+| llm | 0.060 [0.033, 0.087] | 0.083 [0.053, 0.113] | 0.107 [0.077, 0.143] | — |
+| hybrid | 0.047 [0.023, 0.070] | 0.100 [0.067, 0.137] | 0.103 [0.073, 0.140] | 0.093 [0.063, 0.127] |
 
 
 ## Experiment 5 — Placement (Q / C / O / CO)

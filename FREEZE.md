@@ -86,6 +86,13 @@ gurma -c configs/main_guard_ministral_8b.yaml rerun-guardrails
 gurma -c configs/main_guard_ministral_14b.yaml rerun-guardrails
 gurma guard-size-compare
 
+# Guard-size × unseen (reuse Exp-4 held-out attacks; G1)
+for cfg in main_xfer_llm_s main_xfer_llm_m main_xfer_llm_l \
+           main_xfer_hybrid_s main_xfer_hybrid_m main_xfer_hybrid_l; do
+  gurma -c configs/${cfg}.yaml rerun-guardrails
+done
+gurma xfer-size-compare
+
 # Experiment 6 — Guard model capacity (S/M/L × LLM-only|hybrid; Nova Pro; G1)
 for cfg in main_e6_llm_s main_e6_llm_m main_e6_llm_l \
            main_e6_hybrid_s main_e6_hybrid_m main_e6_hybrid_l; do

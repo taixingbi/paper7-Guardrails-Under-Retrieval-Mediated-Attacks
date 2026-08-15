@@ -1,0 +1,31 @@
+# Guard-size × unseen (held-out) attacks. Reuse frozen Exp-4 attacks.
+# G1 only; same 50 seeds as transfer / Ministral / PI.
+run_id: main_xfer_llm_s
+output_dir: data/runs/main_xfer_llm_s
+reuse_from: data/runs/main_transfer
+seed_limit: 50
+skip_llm: false
+skip_clean_runs: true
+attack_family: held_out
+input_hybrid: false
+input_guardrail_mode: llm
+models:
+  llm_a: nova-pro
+  llm_b: llama
+  guardrail: ministral-3b
+  judge: gpt-oss
+guardrail_prompt_version: v3
+guardrails: [G1]
+attacks:
+  - indirect_injection
+  - policy_retrieval
+  - authority_conflict
+chat:
+  temperature: 0
+  max_tokens: 512
+  judge_max_tokens: 256
+  guardrail_max_tokens: 768
+llm_concurrency: 2
+http_retries: 5
+bootstrap_n: 2000
+track_latency: true

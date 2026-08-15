@@ -106,6 +106,11 @@ def render_paper_report(
         "keeps Acc ≈ 0.84–0.90. Scaling does not remove the need for rules — "
         "architecture (hybrid) dominates size for usable defense. PSR remains "
         "non-zero under both modes.",
+        "9. **Guard-size × unseen:** on held-out A1/A3/A4 (rules mostly miss), "
+        "Safety ASR stays ~0.05–0.11 across S/M/L and does **not** fall with scale "
+        "(LLM-only 0.060→0.107; hybrid 0.047→0.103). Acc rises modestly with size; "
+        "gpt-oss hybrid Acc (0.830) still beats the Ministral/Llama ladder. "
+        "Size is not a substitute for G2 / novel-phrasing coverage.",
         "",
         "## Table 1 — Dataset",
         "",
@@ -334,13 +339,14 @@ def render_paper_report(
         (
             "## External baselines & input paradigms (G1)",
             ROOT / "data/runs/baseline_compare/baseline_compare.md",
-            "Compare hybrid / rules / LLM / classic PI detector / LLM moderation.",
+            "Compare hybrid / rules / LLM / classic PI detector / LLM moderation "
+            "on the same 50 freeze seeds.",
         ),
         (
             "## Guardrail model-size ablation (G1)",
             ROOT / "data/runs/guard_size_compare/guard_size_compare.md",
-            "Earlier hybrid-only Ministral ladder (both answer models). "
-            "Prefer Experiment 6 capacity grid below when available.",
+            "Hybrid-only Ministral ladder vs gpt-oss 120B on the same 50 freeze seeds "
+            "(subset of main; no re-inference). Prefer Experiment 6 for LLM-only vs hybrid.",
         ),
         (
             "## Experiment 6 — Guard model capacity",
@@ -348,6 +354,12 @@ def render_paper_report(
             "Fixed target=nova-pro, G1/context, v3 prompts/rules, 50 seeds. "
             "Vary guard size (ministral-3b / ministral-14b / llama-70B) × "
             "mode (LLM-only vs hybrid). RQ1 scaling; RQ2 rules still needed?",
+        ),
+        (
+            "## Guard-size × unseen attacks",
+            ROOT / "data/runs/xfer_size_compare/xfer_size_compare.md",
+            "Same held-out A1/A3/A4 as Experiment 4. Rules mostly miss, so "
+            "guard LLM size can move Safety ASR (unlike in-distribution hybrid).",
         ),
     ]
     for title, path, blurb in extra_sections:

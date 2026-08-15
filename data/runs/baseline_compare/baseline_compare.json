@@ -7,26 +7,26 @@
       "safety_asr_ci": {
         "low": 0.0,
         "high": 0.0,
-        "n": 600,
+        "n": 300,
         "n_boot": 2000
       },
-      "psr": 0.3,
+      "psr": 0.31,
       "psr_ci": {
-        "low": 0.235,
-        "high": 0.36,
-        "n": 200,
+        "low": 0.22,
+        "high": 0.4,
+        "n": 100,
         "n_boot": 2000
       },
-      "task_accuracy": 0.82,
+      "task_accuracy": 0.85,
       "task_accuracy_ci": {
-        "low": 0.79375,
-        "high": 0.84625,
-        "n": 800,
+        "low": 0.815,
+        "high": 0.8825,
+        "n": 400,
         "n_boot": 2000
       },
       "mean_latency_ms": null,
       "mean_llm_calls": null,
-      "n_attack": 800
+      "n_attack": 400
     },
     {
       "defense": "rules",
@@ -34,53 +34,53 @@
       "safety_asr_ci": {
         "low": 0.0,
         "high": 0.0,
-        "n": 600,
+        "n": 300,
         "n_boot": 2000
       },
-      "psr": 0.415,
+      "psr": 0.4,
       "psr_ci": {
-        "low": 0.345,
-        "high": 0.48,
-        "n": 200,
+        "low": 0.31,
+        "high": 0.49,
+        "n": 100,
         "n_boot": 2000
       },
-      "task_accuracy": 0.78625,
+      "task_accuracy": 0.825,
       "task_accuracy_ci": {
-        "low": 0.7575,
-        "high": 0.81375,
-        "n": 800,
+        "low": 0.7875,
+        "high": 0.86,
+        "n": 400,
         "n_boot": 2000
       },
       "mean_latency_ms": null,
       "mean_llm_calls": null,
-      "n_attack": 800
+      "n_attack": 400
     },
     {
       "defense": "llm",
-      "safety_asr": 0.45666666666666667,
+      "safety_asr": 0.44,
       "safety_asr_ci": {
-        "low": 0.4166666666666667,
-        "high": 0.49666666666666665,
-        "n": 600,
+        "low": 0.38333333333333336,
+        "high": 0.49333333333333335,
+        "n": 300,
         "n_boot": 2000
       },
-      "psr": 0.335,
+      "psr": 0.32,
       "psr_ci": {
-        "low": 0.27,
-        "high": 0.405,
-        "n": 200,
+        "low": 0.23,
+        "high": 0.42,
+        "n": 100,
         "n_boot": 2000
       },
-      "task_accuracy": 0.3925,
+      "task_accuracy": 0.4275,
       "task_accuracy_ci": {
-        "low": 0.35875,
-        "high": 0.42625,
-        "n": 800,
+        "low": 0.3825,
+        "high": 0.48,
+        "n": 400,
         "n_boot": 2000
       },
       "mean_latency_ms": null,
       "mean_llm_calls": null,
-      "n_attack": 800
+      "n_attack": 400
     },
     {
       "defense": "pi_detector",
@@ -137,5 +137,5 @@
       "n_attack": 400
     }
   ],
-  "note": "G1-only comparison across GURMA input modes and external baselines. pi_detector / moderation are not GURMA template rules. Baseline runs may use seed_limit=50; check n_attack."
+  "note": "G1-only comparison on the **same 50 freeze seeds** (n_attack=400 = 50\u00d74 attacks\u00d72 models). hybrid/rules/llm are subsets of the 100-seed runs; pi_detector / moderation were already seed_limit=50. pi_detector / moderation are not GURMA template rules."
 }
