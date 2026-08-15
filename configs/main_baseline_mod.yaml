@@ -1,4 +1,4 @@
-# External baseline: LLM moderation prompt (moderation_v1), not GURMA hybrid v3.
+# External baseline: LLM moderation prompt (`moderation.txt`), not GURMA hybrid.
 run_id: main_baseline_mod
 output_dir: data/runs/main_baseline_mod
 reuse_from: data/runs/main

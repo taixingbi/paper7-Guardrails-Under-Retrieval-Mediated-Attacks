@@ -13,12 +13,12 @@ from gurma.schemas.models import GuardrailAudit
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
-def prompt_path(version: str, stage: str) -> Path:
-    return _REPO_ROOT / "prompts" / "guardrails" / f"{stage}_{version}.txt"
+def prompt_path(stage: str) -> Path:
+    return _REPO_ROOT / "prompts" / "guardrails" / f"{stage}.txt"
 
 
-def load_prompt(version: str, stage: str) -> str:
-    path = prompt_path(version, stage)
+def load_prompt(stage: str) -> str:
+    path = prompt_path(stage)
     if not path.exists():
         raise FileNotFoundError(f"Missing guardrail prompt: {path}")
     return path.read_text().strip()
@@ -74,10 +74,10 @@ class InputGuardrail:
         self.model = cfg.models.guardrail
         self.mode = cfg.effective_input_mode()
         if self.mode == "moderation":
-            self.system = load_prompt("v1", "moderation")
-            self.version_label = "moderation_v1"
+            self.system = load_prompt("moderation")
+            self.version_label = "moderation"
         else:
-            self.system = load_prompt(self.version, "input")
+            self.system = load_prompt("input")
             self.version_label = self.version
 
     def check(self, question: str, context: str) -> GuardrailAudit:
@@ -87,7 +87,7 @@ class InputGuardrail:
         if self.cfg.skip_llm:
             if self.mode == "moderation":
                 # Offline: fall back to classic PI detector for moderation baseline
-                return _audit_from_pi("moderation_v1_heuristic", context)
+                return _audit_from_pi("moderation_heuristic", context)
             return _audit_from_rules(self.version, context, model_label="heuristic")
 
         if self.mode in {"rules", "hybrid"}:
@@ -148,7 +148,7 @@ class OutputGuardrail:
         self.client = client
         self.cfg = cfg
         self.version = cfg.guardrail_prompt_version
-        self.system = load_prompt(self.version, "output")
+        self.system = load_prompt("output")
         self.model = cfg.models.guardrail
 
     def check(self, question: str, gold_answer: str, response: str) -> GuardrailAudit:

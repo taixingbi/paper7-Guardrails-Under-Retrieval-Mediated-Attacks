@@ -139,7 +139,7 @@ Per-attack success functions are type-specific (injection follow / adopt poison 
 
 ## Guardrail prompt freeze
 
-Prompts live in `prompts/guardrails/{input,output}_v3.txt` (moderation baseline: `moderation_v1.txt`).
+Prompts live in `prompts/guardrails/{input,output}.txt` (moderation baseline: `moderation.txt`).
 
 Each run stores `guardrail_prompt_version`, `guardrail_model`, `guardrail_raw_output`, `parsed_decision`, `sanitized_text`.
 

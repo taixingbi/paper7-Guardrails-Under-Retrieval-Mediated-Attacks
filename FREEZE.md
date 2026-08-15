@@ -6,8 +6,8 @@ Locked after pilot_v3 gate review. **Do not edit prompts or hybrid flag once mai
 |------|--------|
 | `guardrail_prompt_version` | `v3` |
 | `input_hybrid` | `true` (rules first, LLM residual) |
-| Input prompt | `prompts/guardrails/input_v3.txt` |
-| Output prompt | `prompts/guardrails/output_v3.txt` |
+| Input prompt | `prompts/guardrails/input.txt` |
+| Output prompt | `prompts/guardrails/output.txt` |
 | Rules | `src/gurma/guardrails/rules.py` |
 | Answer models | `nova-pro`, `llama` |
 | Guard/judge model | `gpt-oss` |

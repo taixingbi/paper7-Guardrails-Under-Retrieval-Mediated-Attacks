@@ -1,6 +1,14 @@
 from pathlib import Path
 
 from gurma.config import load_config
+from gurma.guardrails.llm_guard import prompt_path
+
+
+def test_prompt_files_are_unversioned():
+    for stage in ("input", "output", "moderation"):
+        path = prompt_path(stage)
+        assert path.name == f"{stage}.txt"
+        assert path.exists(), path
 
 
 def test_config_extends_merges_guard_model(tmp_path: Path):
